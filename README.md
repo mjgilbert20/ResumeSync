@@ -1,4 +1,4 @@
-# resumeSyncer
+# Resume Sync
 
 **Team Members:**  
 - Abhigna Nimmagadda  
