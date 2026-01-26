@@ -10,7 +10,7 @@
 ---
 
 ## Project Summary
-The Resume Syncing Tool is a resume syncing tool that uses one main resume as the source and when the user updates that main resume the tool will automatically update their resume on LinkedIn, Handshake, and job application websites for them. This helps user avoid updating the same thing multiple times on different job boards. 
+The Resume Sync Tool uses one main resume as the source and when the user updates that main resume the tool will automatically update their resume on LinkedIn, Handshake, and job application websites for them. This helps user avoid updating the same thing multiple times on different job boards. 
 
 ---
 
