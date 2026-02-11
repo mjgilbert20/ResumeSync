@@ -1,0 +1,109 @@
+<div class="overlay-container">
+  <div class="overlay-header">
+    <h1>📄 Resume Manager</h1>
+    <div class="overlay-controls">
+      <button id="minimizeOverlay" class="overlay-btn" title="Minimize">🔽</button>
+      <button id="closeOverlay" class="overlay-btn" title="Close">✕</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="resume">Resume</button>
+    <button class="tab-btn" data-tab="versions">Versions</button>
+    <button class="tab-btn" data-tab="compare">Compare</button>
+  </div>
+
+  <!-- Resume Tab -->
+  <div id="resume-tab" class="tab-content active">
+    <div class="section">
+      <h2>Import Resume</h2>
+      <div class="form-group">
+        <label>Upload PDF Resume</label>
+        <input type="file" id="pdfUpload" accept=".pdf" style="margin-bottom: 10px;">
+        <button id="parsePDF" class="btn btn-primary" style="width: 100%;">📄 Parse PDF & Auto-Fill</button>
+        <div id="pdfStatus" class="status-message"></div>
+      </div>
+    </div>
+    
+    <div class="section" style="margin-top: 20px;">
+      <h2>Your Resume Data</h2>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="fullName" placeholder="John Doe">
+      </div>
+      
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="john@example.com">
+      </div>
+      
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="tel" id="phone" placeholder="+1 234-567-8900">
+      </div>
+      
+      <div class="form-group">
+        <label>Current Title</label>
+        <input type="text" id="title" placeholder="Software Engineer">
+      </div>
+      
+      <div class="form-group">
+        <label>Summary</label>
+        <textarea id="summary" rows="4" placeholder="Professional summary..."></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Experience (JSON format)</label>
+        <textarea id="experience" rows="6" placeholder='[{"company": "ABC Inc", "title": "Developer", "duration": "2020-2023", "description": "Built web apps"}]'></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Education (JSON format)</label>
+        <textarea id="education" rows="4" placeholder='[{"school": "University", "degree": "BS Computer Science", "year": "2020"}]'></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Skills (comma-separated)</label>
+        <input type="text" id="skills" placeholder="JavaScript, Python, React, Node.js">
+      </div>
+      
+      <div class="form-group">
+        <label>Version Notes (optional)</label>
+        <input type="text" id="versionNotes" placeholder="Updated work experience">
+      </div>
+      
+      <div class="button-group">
+        <button id="saveResume" class="btn btn-primary">💾 Save Resume</button>
+        <button id="loadResume" class="btn btn-secondary">📂 Load Current</button>
+      </div>
+      
+      <div id="saveStatus" class="status-message"></div>
+    </div>
+  </div>
+
+  <!-- Versions Tab -->
+  <div id="versions-tab" class="tab-content">
+    <div class="section">
+      <h2>Resume Version History</h2>
+      <div id="versionsList" class="versions-list">
+        <p class="empty-state">No versions saved yet</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compare Tab -->
+  <div id="compare-tab" class="tab-content">
+    <div class="section">
+      <h2>Profile Comparison</h2>
+      <p class="help-text">Navigate to LinkedIn or Handshake, then click "Scan Profile" to compare with your resume.</p>
+      
+      <div class="button-group">
+        <button id="scanProfile" class="btn btn-primary">🔍 Scan Current Profile</button>
+      </div>
+      
+      <div id="compareStatus" class="status-message"></div>
+      
+      <div id="comparisonResults" class="comparison-results"></div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,64 @@
+{
+  "manifest_version": 2,
+  "name": "Resume Sync & Version Manager",
+  "version": "2.0.0",
+  "description": "Store your resume locally, track versions, and compare with LinkedIn and Handshake profiles",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "https://www.linkedin.com/*",
+    "https://*.joinhandshake.com/*",
+    "<all_urls>"
+  ],
+  "browser_action": {
+    "default_title": "Toggle Resume Manager (Ctrl+Shift+R)",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "scripts": ["js/background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["js/overlay-inject.js"],
+      "css": ["css/overlay.css"],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": ["https://www.linkedin.com/*"],
+      "js": ["js/linkedin-scraper.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.joinhandshake.com/*"],
+      "js": ["js/handshake-scraper.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    "overlay.html",
+    "js/overlay-logic.js",
+    "css/overlay.css"
+  ],
+  "commands": {
+    "toggle-overlay": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+R"
+      },
+      "description": "Toggle Resume Manager overlay"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_security_policy": "script-src 'self' https://cdnjs.cloudflare.com; object-src 'self'"
+}

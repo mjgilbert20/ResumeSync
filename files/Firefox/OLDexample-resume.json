@@ -1,0 +1,57 @@
+{
+  "fullName": "Jane Smith",
+  "email": "jane.smith@email.com",
+  "phone": "+1 555-123-4567",
+  "title": "Senior Software Engineer",
+  "summary": "Results-driven software engineer with 5+ years of experience in full-stack development. Passionate about building scalable web applications and leading technical teams. Expertise in JavaScript, React, Node.js, and cloud technologies.",
+  "experience": [
+    {
+      "company": "Tech Innovations Inc.",
+      "title": "Senior Software Engineer",
+      "duration": "2021 - Present",
+      "description": "Lead development of microservices architecture serving 1M+ users. Mentor junior developers and conduct code reviews."
+    },
+    {
+      "company": "Digital Solutions Co.",
+      "title": "Software Engineer",
+      "duration": "2019 - 2021",
+      "description": "Developed responsive web applications using React and Node.js. Implemented CI/CD pipelines and automated testing."
+    },
+    {
+      "company": "StartUp Labs",
+      "title": "Junior Developer",
+      "duration": "2018 - 2019",
+      "description": "Built RESTful APIs and contributed to front-end development. Collaborated with designers to implement pixel-perfect UIs."
+    }
+  ],
+  "education": [
+    {
+      "school": "State University",
+      "degree": "Bachelor of Science in Computer Science",
+      "year": "2018"
+    },
+    {
+      "school": "Tech Academy",
+      "degree": "Full Stack Web Development Bootcamp",
+      "year": "2017"
+    }
+  ],
+  "skills": [
+    "JavaScript",
+    "TypeScript",
+    "React",
+    "Node.js",
+    "Express",
+    "MongoDB",
+    "PostgreSQL",
+    "AWS",
+    "Docker",
+    "Kubernetes",
+    "Git",
+    "Agile/Scrum",
+    "REST APIs",
+    "GraphQL",
+    "CI/CD",
+    "Unit Testing"
+  ]
+}
