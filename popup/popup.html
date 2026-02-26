@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResumeSync</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📄 ResumeSync</h1>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="resume">Resume</button>
+      <button class="tab-btn" data-tab="versions">Versions</button>
+      <button class="tab-btn" data-tab="compare">Compare</button>
+    </div>
+
+    <!-- ── Resume Tab ──────────────────────────────────────────────── -->
+    <div id="resume-tab" class="tab-content active">
+      <div class="section">
+        <h2>Your Resume Data</h2>
+
+        <!-- Import / Export -->
+        <div class="import-block">
+          <p class="help-text">
+            <strong>Import</strong> a previously exported <code>.json</code> file to restore all
+            fields instantly, a plain-text <code>.txt</code> resume, or a <code>.pdf</code> resume
+            to auto-parse name, email, phone, summary, and skills.
+          </p>
+          <!-- Hidden real file input -->
+          <input type="file" id="resumeFileInput" accept=".json,.txt,.pdf" style="display:none">
+          <div class="button-group">
+            <button id="importResumeBtn" class="btn btn-accent">📤 Import Resume File</button>
+            <button id="exportResumeBtn" class="btn btn-secondary">📥 Export as JSON</button>
+          </div>
+          <div id="importStatus" class="status-message"></div>
+        </div>
+        <hr class="divider">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="fullName" placeholder="John Doe">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="email" placeholder="john@example.com">
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="tel" id="phone" placeholder="+1 234-567-8900">
+        </div>
+        <div class="form-group">
+          <label>Current Title</label>
+          <input type="text" id="title" placeholder="Software Engineer">
+        </div>
+        <div class="form-group">
+          <label>Summary</label>
+          <textarea id="summary" rows="4" placeholder="Professional summary..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Experience <span class="label-hint">(JSON array)</span></label>
+          <textarea id="experience" rows="6" placeholder='[{"company":"ABC Inc","title":"Developer","duration":"2020-2023","description":"Built web apps"}]'></textarea>
+        </div>
+        <div class="form-group">
+          <label>Education <span class="label-hint">(JSON array)</span></label>
+          <textarea id="education" rows="4" placeholder='[{"school":"University","degree":"BS Computer Science","year":"2020"}]'></textarea>
+        </div>
+        <div class="form-group">
+          <label>Skills <span class="label-hint">(comma-separated)</span></label>
+          <input type="text" id="skills" placeholder="JavaScript, Python, React, Node.js">
+        </div>
+        <div class="form-group">
+          <label>Version Notes <span class="label-hint">(optional)</span></label>
+          <input type="text" id="versionNotes" placeholder="Updated work experience">
+        </div>
+        <div class="button-group">
+          <button id="saveResume" class="btn btn-primary">💾 Save Resume</button>
+          <button id="loadResume" class="btn btn-secondary">📂 Load Current</button>
+        </div>
+        <div id="saveStatus" class="status-message"></div>
+      </div>
+    </div>
+
+    <!-- ── Versions Tab ────────────────────────────────────────────── -->
+    <div id="versions-tab" class="tab-content">
+      <div class="section">
+        <h2>Version History</h2>
+        <div id="versionsList" class="versions-list">
+          <p class="empty-state">No versions saved yet</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Compare Tab ────────────────────────────────────────────── -->
+    <div id="compare-tab" class="tab-content">
+      <div class="section">
+        <h2>Profile Comparison</h2>
+
+        <!-- Quick Scan -->
+        <div class="scan-block">
+          <p class="help-text">
+            <strong>Quick Scan</strong> — reads the current LinkedIn or Handshake
+            page without navigating away.
+          </p>
+          <button id="scanProfile" class="btn btn-primary">🔍 Quick Scan Profile</button>
+        </div>
+
+        <!-- Deep Scan (LinkedIn only) -->
+        <div class="scan-block">
+          <p class="help-text">
+            <strong>Deep Scan LinkedIn</strong> — navigates through Certifications
+            and Skills sub-pages to collect the full dataset. The tab will briefly
+            redirect; return here when it finishes.
+          </p>
+          <div class="button-group">
+            <button id="deepScanLinkedIn" class="btn btn-accent">🔎 Deep Scan LinkedIn</button>
+            <button id="loadDeepResult"   class="btn btn-secondary">📥 Load Last Deep Result</button>
+          </div>
+          <div id="deepScanStatus" class="status-message"></div>
+        </div>
+
+        <!-- Smart Compare (on-device MiniLM) -->
+        <div class="scan-block">
+          <p class="help-text">
+            <strong>Smart Compare</strong> &#x2014; uses a fully bundled on-device AI
+            model (all-MiniLM-L6-v2) to score semantic alignment between your resume
+            and the last scanned profile. Runs entirely locally &#x2014; no internet
+            required. Run a Quick Scan or Deep Scan first, then click below.
+          </p>
+          <button id="smartCompareBtn" class="btn btn-neural">&#x1F9E0; Smart Compare</button>
+          <div id="modelProgress" class="model-progress" style="display:none">
+            <div class="model-progress-bar">
+              <div id="modelProgressFill" class="model-progress-fill"></div>
+            </div>
+            <span id="modelProgressLabel" class="model-progress-label">Loading&#x2026;</span>
+          </div>
+          <div id="smartCompareStatus" class="status-message"></div>
+          <div id="smartCompareResults" class="smart-results"></div>
+        </div>
+
+        <div id="compareStatus" class="status-message"></div>
+        <div id="comparisonResults" class="comparison-results"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/pdf-extract.js"></script>
+  <script type="module" src="js/semantic-ui.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

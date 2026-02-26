@@ -1,0 +1,73 @@
+{
+  "manifest_version": 3,
+  "name": "ResumeSync",
+  "version": "2.0.0",
+  "description": "Store your resume locally, track versions, and compare with LinkedIn and Handshake profiles",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "https://www.linkedin.com/*",
+    "https://*.joinhandshake.com/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.linkedin.com/*"
+      ],
+      "js": [
+        "scrapers/linkedin-scraper.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.joinhandshake.com/*"
+      ],
+      "js": [
+        "scrapers/handshake-scraper.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "vendor/transformers.min.js",
+        "vendor/ort-wasm.wasm",
+        "vendor/ort-wasm-simd.wasm",
+        "vendor/ort-wasm-threaded.wasm",
+        "vendor/ort-wasm-simd-threaded.wasm",
+        "vendor/model/*",
+        "vendor/model/onnx/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}
