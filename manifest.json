@@ -57,13 +57,13 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "vendor/transformers.min.js",
-        "vendor/ort-wasm.wasm",
-        "vendor/ort-wasm-simd.wasm",
-        "vendor/ort-wasm-threaded.wasm",
-        "vendor/ort-wasm-simd-threaded.wasm",
-        "vendor/model/*",
-        "vendor/model/onnx/*"
+        "contextualize/transformers.min.js",
+        "contextualize/ort-wasm.wasm",
+        "contextualize/ort-wasm-simd.wasm",
+        "contextualize/ort-wasm-threaded.wasm",
+        "contextualize/ort-wasm-simd-threaded.wasm",
+        "contextualize/model/*",
+        "contextualize/model/onnx/*"
       ],
       "matches": [
         "<all_urls>"
