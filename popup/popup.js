@@ -17,6 +17,7 @@ document.querySelectorAll(".tab-btn").forEach((button) => {
 
 // ── Resume Tab ───────────────────────────────────────────────────────────────
 
+//resume is being saved as a version, with metadata of the version, structured object (containing parsed info), and time stamp.
 document.getElementById("saveResume").addEventListener("click", async () => {
   const statusEl = document.getElementById("saveStatus");
   try {
@@ -29,7 +30,7 @@ document.getElementById("saveResume").addEventListener("click", async () => {
       experience:  parseJSON(document.getElementById("experience").value, []),
       education:   parseJSON(document.getElementById("education").value, []),
       skills:      document.getElementById("skills").value.split(",").map((s) => s.trim()).filter(Boolean),
-      lastUpdated: new Date().toISOString()
+      //lastUpdated: new Date().toISOString() - time stamp is already taken when a version is created & that timestamp is used for identification. no need to repeat it here again.
     };
 
     if (!resumeData.fullName || !resumeData.email) {
@@ -389,11 +390,17 @@ async function loadVersionHistory() {
   }
 }
 
+//creates the actual version here!!
 async function createVersion(resumeData, notes) {
+  //resume versions: array storing all of the previously saved versions. 
+  //if it exists, we will store this new version there. otherwise, create new array
   const { resumeVersions } = await chrome.storage.local.get("resumeVersions");
   const versions = resumeVersions || [];
+  //unshift function: moves down the array & adds a new element at the 1st index. saving id, data, and timestamp
+  //cutoff: 20 versions. if more, remove the last element of the array.
   versions.unshift({ id: Date.now(), data: resumeData, notes, timestamp: new Date().toISOString() });
   if (versions.length > 20) versions.splice(20);
+  //
   await chrome.storage.local.set({ resumeVersions: versions });
 }
 
