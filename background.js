@@ -50,7 +50,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
 
 //////////////// STORAGE HELPERS ////////////////
 
-//////////////// saveToStorage ////////////////
+
 // Takes in:  data — an object of key/value pairs to write (e.g. { currentResume: {...} })
 // Purpose:   Writes data into the browser's local storage so it persists between
 //            sessions. Returns a Promise so the caller can wait for it to finish
@@ -67,7 +67,7 @@ function saveToStorage(data) {
   });
 }
 
-//////////////// loadFromStorage ////////////////
+
 // Takes in:  nothing — always reads the same fixed set of ResumeSync storage keys
 // Purpose:   Reads all ResumeSync-related data out of browser storage and returns
 //            it as one object. Returns a Promise so the caller can wait for the
@@ -114,7 +114,6 @@ async function handleUpload(resumeData) {
 
 const NATIVE_HOST = "com.resumesync.parser";
 
-//////////////// callParseAnalyzer ////////////////
 // Takes in:  resumeRaw — the user's saved resume object
 //            siteRaw   — the scraped site data object (from LinkedIn or Handshake)
 // Purpose:   Opens a communication channel to the Python ParseAnalyzer program
@@ -148,7 +147,6 @@ function callParseAnalyzer(resumeRaw, siteRaw) {
   });
 }
 
-//////////////// JS FALLBACK COMPARISON ////////////////
 // Takes in:  resumeData — the user's saved resume object
 //            siteData   — the scraped site data object (from LinkedIn or Handshake)
 // Purpose:   A lightweight JavaScript-only comparison used when the Python
@@ -191,7 +189,6 @@ function jsFallbackCompare(resumeData, siteData) {
   return results;
 }
 
-//////////////// COMPARE HANDLER ////////////////
 // Takes in:  nothing — reads everything it needs directly from storage
 // Purpose:   Orchestrates the full comparison flow. Loads the saved resume and the
 //            most recently cached site data from storage, validates that both exist,
@@ -222,6 +219,7 @@ function sendResultsToPopup(results) {
 }
 
 //////////////// MESSAGE LISTENER ////////////////
+
 // Takes in:  request     — object containing an "action" string and any accompanying data
 //            sender      — info about which script sent the message (popup or scraper)
 //            sendResponse — a callback used to reply directly back to the sender
