@@ -250,6 +250,65 @@ function populateForm(r) {
   document.getElementById("experience").value = JSON.stringify(r.experience || [], null, 2);
   document.getElementById("education").value  = JSON.stringify(r.education  || [], null, 2);
   document.getElementById("skills").value     = (r.skills || []).join(", ");
+
+  updatePreview(); 
+}
+
+// -- Preview Tab - - Format resume data into a clean, copyable layout for pasting into job applications ----
+
+//Turns raw JSON data into human readable format for copy-paste into job applications
+function formatForApplication(data) {
+  let html = '<div class="formatted-resume">';
+
+  if (data.fullName) html += `<h2>${data.fullName}</h2>`;
+  if (data.title) html += `<h3>${data.title}</h3>`;
+  if (data.summary) html += `<p>${data.summary}</p>`;
+
+
+  if (data.experience?.length) {
+    html += `<h4>Experience</h4>`;
+    data.experience.forEach((exp) => {
+      html += `<p>- ${exp.title} at ${exp.company} (${exp.duration})</p>`;
+    });
+  }
+
+  if (data.education?.length) {
+    html += `<h4>Education</h4>`;
+    data.education.forEach((edu) => {
+      html += `<p>- ${edu.degree} from ${edu.school} (${edu.duration})</p>`;
+    });
+  }
+
+  if (data.skills?.length) {
+    html += `<h4>Skills</h4>`;
+    data.skills.forEach((skill) => {
+      html += `<p>- ${skill}</p>`;
+    });
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function updatePreview() {
+  const currentResume = {
+    fullName: document.getElementById("fullName").value,
+    title:    document.getElementById("title").value,
+    summary:  document.getElementById("summary").value,
+    experience: parseExperience(document.getElementById("experience").value) || [],
+    education:  parseEducation(document.getElementById("education").value) || [],
+    skills:     document.getElementById("skills").value.split(",").map(s => s.trim()).filter(s => s.length > 0)
+  };
+
+  const previewContainer = document.getElementById("formattedResume");
+  if (previewContainer) {
+    previewContainer.innerHTML = formatForApplication(currentResume);
+  }
+
+  //const displayContainer = document.getElementById("experienceDisplay");
+  //if (displayContainer) {
+    //displayContainer.innerHTML = formatForApplication(currentResume); 
+  //}
 }
 
 // ── Compare Tab — Quick Scan ─────────────────────────────────────────────────
