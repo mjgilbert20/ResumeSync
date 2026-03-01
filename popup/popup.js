@@ -404,7 +404,7 @@ async function restoreVersion(versionId) {
     if (!version) { alert("Version not found"); return; }
     await chrome.storage.local.set({ currentResume: version.data });
     populateForm(version.data); 
-    await createVersion(version.data, `Restored from ${new Date(version.timestamp).toLocaleDateString()}`);
+    //await createVersion(version.data, `Restored from ${new Date(version.timestamp).toLocaleDateString()}`);
     alert("✓ Version restored!");
 
     //switch tabs to resume tab so user can see restored version right away
