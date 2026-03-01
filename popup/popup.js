@@ -665,3 +665,37 @@ function ensureButtonRegistered(buttonId, callback) {
   });
 
 }
+
+//Parse through input and convert JSON into a JavaScript object. If the input is empty or invalid, return a default value (like an empty array). 
+// This makes it easier to handle user input without crashing the app due to bad JSON.
+function parseJSON(str) {
+  if (!str?.trim()) return [];
+  try {
+    return JSON.parse(str);
+  } catch (err) {
+    console.error("JSON parse error:", err);
+    console.error("Input string:", str);
+    console.error("Error message:", err.message);
+
+    alert (`Invalid JSON format: ${err.message}\nPlease check the console for details.`);
+    return [];
+  }
+}
+
+//parse through experience user input 
+//Allow users to input information without needing to use JSON format and separate information accordingly
+function parseExperience(text) {
+  return text.split("\n").map((line) => {
+    const [company, title, duration] = line.split(",").map((part) => part.trim());
+    return { company, title, duration };
+  });
+}
+
+//parse through education user input 
+//Allow users to input information without needing to use JSON format and separate information accordingly
+function parseEducation(text) {
+  return text.split("\n").map((line) => {
+    const [school, degree, duration] = line.split(",").map((part) => part.trim());
+    return { school, degree, duration };
+  });
+}
