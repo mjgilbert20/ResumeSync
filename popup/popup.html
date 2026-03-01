@@ -14,6 +14,7 @@
 
     <div class="tabs">
       <button class="tab-btn active" data-tab="resume">Resume</button>
+      <button class="tab-btn" data-tab="resumePreview">Preview</button>
       <button class="tab-btn" data-tab="versions">Versions</button>
       <button class="tab-btn" data-tab="compare">Compare</button>
     </div>
@@ -82,6 +83,20 @@
         <div id="saveStatus" class="status-message"></div>
       </div>
     </div>
+    
+    <!-- Preview Tab -->
+    <!-- Formal Resume Layout for User to Copy and Paste Into Application -->
+     <div id="resumePreview-tab" class="tab-content resume-preview">
+       <div class="section">
+         <h2>Resume Preview</h2>
+         <p class="help-text">
+           Copy and paste this formatted version of your resume directly into job applications,
+           LinkedIn profiles, or anywhere else you need a polished resume. It updates in real-time
+           as you edit your data in the Resume tab.
+         </p>
+         <div id="formattedResume" class="formatted-resume"></div>
+       </div>
+     </div>
 
     <!-- ── Versions Tab ────────────────────────────────────────────── -->
     <div id="versions-tab" class="tab-content">
