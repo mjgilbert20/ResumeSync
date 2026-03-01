@@ -403,8 +403,12 @@ async function restoreVersion(versionId) {
     const version = (resumeVersions || []).find((v) => v.id === versionId);
     if (!version) { alert("Version not found"); return; }
     await chrome.storage.local.set({ currentResume: version.data });
+    populateForm(version.data); 
     await createVersion(version.data, `Restored from ${new Date(version.timestamp).toLocaleDateString()}`);
     alert("✓ Version restored!");
+
+    //switch tabs to resume tab so user can see restored version right away
+    document.querySelector(".tab-btn[data-tab='resume']").click(); 
     loadVersionHistory();
   } catch (err) {
     alert(`Error: ${err.message}`);
