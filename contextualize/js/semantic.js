@@ -1,8 +1,8 @@
 // semantic.js — On-device semantic similarity using all-MiniLM-L6-v2 (int8)
 //
-// All assets are bundled locally inside the extension (vendor/ folder).
+// All assets are bundled locally inside the extension (contextualize/ folder).
 // Nothing is fetched at runtime — no network calls, no downloads, no CDN.
-// Run `node setup.js` once from the extension root to populate vendor/.
+// Run `node setup.js` once from the extension root to populate contextualize/.
 
 let _pipeline = null;
 
@@ -12,12 +12,12 @@ export async function loadModel(onProgress) {
 
   onProgress?.(0, "Loading model…");
 
-  const vendorBase = chrome.runtime.getURL("vendor");
-  const modelBase  = chrome.runtime.getURL("vendor/model");
+  const contextualizeBase = chrome.runtime.getURL("contextualize");
+  const modelBase  = chrome.runtime.getURL("contextualize/model");
 
   // Import the bundled (local) Transformers.js
   const { pipeline, env } = await import(
-    chrome.runtime.getURL("vendor/transformers.min.js")
+    chrome.runtime.getURL("contextualize/transformers.min.js")
   );
 
   // Disable all remote fetching — use only bundled files
@@ -27,7 +27,7 @@ export async function loadModel(onProgress) {
   env.localModelPath    = modelBase + "/";
 
   // Point ONNX runtime at our bundled WASM binaries
-  env.backends.onnx.wasm.wasmPaths = vendorBase + "/";
+  env.backends.onnx.wasm.wasmPaths = contextualizeBase + "/";
 
   _pipeline = await pipeline(
     "feature-extraction",
