@@ -20,6 +20,19 @@ document.querySelectorAll(".tab-btn").forEach((button) => {
 //resume is being saved as a version, with metadata of the version, structured object (containing parsed info), and time stamp.
 document.getElementById("saveResume").addEventListener("click", async () => {
   const statusEl = document.getElementById("saveStatus");
+
+  //new parsing logic for experience and education fields. users can input in a structured format (company | title | duration) per line, which is then parsed into an array of objects. this allows for more consistent data handling and better comparison later on.
+  const experienceInput = document.getElementById("experience").value;
+  const educationInput = document.getElementById("education").value;
+
+  const experienceData = parseExperience(experienceInput);
+  const educationData = parseEducation(educationInput);
+
+  if (experienceData == null || educationData == null) {
+    showStatus(statusEl, "error", "Invalid format for experience or education. Please use 'Company | Title | Duration' per line.");
+    return;
+  }
+  
   try {
     const resumeData = {
       fullName:    document.getElementById("fullName").value,
@@ -27,8 +40,8 @@ document.getElementById("saveResume").addEventListener("click", async () => {
       phone:       document.getElementById("phone").value,
       title:       document.getElementById("title").value,
       summary:     document.getElementById("summary").value,
-      experience:  parseJSON(document.getElementById("experience").value, []),
-      education:   parseJSON(document.getElementById("education").value, []),
+      experience:  experienceData,
+      education:   educationData,
       skills:      document.getElementById("skills").value.split(",").map((s) => s.trim()).filter(Boolean),
       //lastUpdated: new Date().toISOString() - time stamp is already taken when a version is created & that timestamp is used for identification. no need to repeat it here again.
     };
