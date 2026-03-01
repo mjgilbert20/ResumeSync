@@ -587,3 +587,25 @@ function showStatus(el, type, message) {
 window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("loadResume").click();
 });
+
+// Button Helper
+// Ensure buttons register correctly and exists before adding event listeners to prevent issues with dynamically loaded content or missing elements.
+function ensureButtonRegistered(buttonId, callback) {
+  const button = document.getElementById(buttonId);
+  if (button) {
+    button.addEventListener("click", callback);
+  } else {
+    console.warn(`Button with ID "${buttonId}" not found.`);
+    return; 
+  }
+
+  button.addEventListener("click", async(event) => {
+    event.preventDefault();
+    try {
+      await callback();
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
+  });
+
+}
