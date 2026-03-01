@@ -59,14 +59,7 @@ document.getElementById("loadResume").addEventListener("click", async () => {
       return;
     }
     const r = result.currentResume;
-    document.getElementById("fullName").value   = r.fullName  || "";
-    document.getElementById("email").value      = r.email     || "";
-    document.getElementById("phone").value      = r.phone     || "";
-    document.getElementById("title").value      = r.title     || "";
-    document.getElementById("summary").value    = r.summary   || "";
-    document.getElementById("experience").value = JSON.stringify(r.experience || [], null, 2);
-    document.getElementById("education").value  = JSON.stringify(r.education  || [], null, 2);
-    document.getElementById("skills").value     = (r.skills || []).join(", ");
+    populateForm(r); 
     showStatus(statusEl, "success", "✓ Resume loaded!");
   } catch (err) {
     showStatus(statusEl, "error", `Error: ${err.message}`);
