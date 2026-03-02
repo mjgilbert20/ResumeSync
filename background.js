@@ -1,3 +1,4 @@
+// Background.js is the core orchestrator of the extension.
 // UML roles:
 //   -storage   : browser storage (chrome.storage.local)
 //   -parser    : ParseAnalyzer  (Python native-messaging host)
