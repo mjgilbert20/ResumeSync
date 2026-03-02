@@ -278,7 +278,19 @@ function populateForm(r) {
           .join(", ");
       })
     .join("\n");
-  document.getElementById("education").value  = JSON.stringify(r.education  || [], null, 2);
+  //document.getElementById("education").value  = JSON.stringify(r.education  || [], null, 2);
+  document.getElementById("education").value =
+    (r.education || [])
+      .map(exp => {
+        const school  = exp?.school  || "";
+        const degree  = exp?.degree    || "";
+        const duration = exp?.duration || "";
+
+        return [school, degree, duration]
+          .filter(Boolean)
+          .join(", ");
+      })
+    .join("\n");
   document.getElementById("skills").value     = (r.skills || []).join(", ");
 
   updatePreview(); 
