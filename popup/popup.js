@@ -56,6 +56,9 @@ document.getElementById("saveResume").addEventListener("click", async () => {
     const notes = document.getElementById("versionNotes").value || "Manual save";
     await createVersion(resumeData, notes);
 
+    //making sure to update preview immediately after new info is saved.
+    updatePreview();
+
     showStatus(statusEl, "success", "✓ Resume saved successfully!");
     document.getElementById("versionNotes").value = "";
   } catch (err) {
@@ -271,10 +274,10 @@ function populateForm(r) {
         const duration = exp?.duration || "";
 
         return [company, title, duration]
-          .filter(Boolean)   // removes empty values
+          .filter(Boolean)
           .join(", ");
       })
-      .join("\n");
+    .join("\n");
   document.getElementById("education").value  = JSON.stringify(r.education  || [], null, 2);
   document.getElementById("skills").value     = (r.skills || []).join(", ");
 
@@ -711,6 +714,7 @@ function parseJSON(str) {
 
 //parse through experience user input 
 //Allow users to input information without needing to use JSON format and separate information accordingly
+//only expecting three values. company, title, and duration.
 function parseExperience(text) {
   return text.split("\n").map((line) => {
     const [company, title, duration] = line.split(",").map((part) => part.trim());
