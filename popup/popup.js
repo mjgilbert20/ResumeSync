@@ -260,7 +260,21 @@ function populateForm(r) {
   document.getElementById("phone").value      = r.phone      || "";
   document.getElementById("title").value      = r.title      || "";
   document.getElementById("summary").value    = r.summary    || "";
-  document.getElementById("experience").value = JSON.stringify(r.experience || [], null, 2);
+  //document.getElementById("experience").value = JSON.stringify(r.experience || [], null, 2);
+  //instead of displaying JSON-stringified text, this will separate the company, title, and duration with commas, 
+  //and then the description will be separated with a new line 
+  document.getElementById("experience").value =
+    (r.experience || [])
+      .map(exp => {
+        const company  = exp?.company  || "";
+        const title    = exp?.title    || "";
+        const duration = exp?.duration || "";
+
+        return [company, title, duration]
+          .filter(Boolean)   // removes empty values
+          .join(", ");
+      })
+      .join("\n");
   document.getElementById("education").value  = JSON.stringify(r.education  || [], null, 2);
   document.getElementById("skills").value     = (r.skills || []).join(", ");
 
