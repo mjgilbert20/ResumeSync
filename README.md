@@ -38,3 +38,6 @@ The Resume Sync Tool uses one main resume as the source and when the user update
 - Java (tentative)
 - Database for storing resumes and user data
 - Authentication via third-party providers (Google, Microsoft)
+
+##### AI Usage
+- Our team utilized AI to aid the development process
