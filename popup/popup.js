@@ -17,8 +17,22 @@ document.querySelectorAll(".tab-btn").forEach((button) => {
 
 // ── Resume Tab ───────────────────────────────────────────────────────────────
 
+//resume is being saved as a version, with metadata of the version, structured object (containing parsed info), and time stamp.
 document.getElementById("saveResume").addEventListener("click", async () => {
   const statusEl = document.getElementById("saveStatus");
+
+  //new parsing logic for experience and education fields. users can input in a structured format (company | title | duration) per line, which is then parsed into an array of objects. this allows for more consistent data handling and better comparison later on.
+  const experienceInput = document.getElementById("experience").value;
+  const educationInput = document.getElementById("education").value;
+
+  const experienceData = parseExperience(experienceInput);
+  const educationData = parseEducation(educationInput);
+
+  if (experienceData == null || educationData == null) {
+    showStatus(statusEl, "error", "Invalid format for experience or education. Please use 'Company | Title | Duration' per line.");
+    return;
+  }
+  
   try {
     const resumeData = {
       fullName:    document.getElementById("fullName").value,
@@ -26,10 +40,10 @@ document.getElementById("saveResume").addEventListener("click", async () => {
       phone:       document.getElementById("phone").value,
       title:       document.getElementById("title").value,
       summary:     document.getElementById("summary").value,
-      experience:  parseJSON(document.getElementById("experience").value, []),
-      education:   parseJSON(document.getElementById("education").value, []),
+      experience:  experienceData,
+      education:   educationData,
       skills:      document.getElementById("skills").value.split(",").map((s) => s.trim()).filter(Boolean),
-      lastUpdated: new Date().toISOString()
+      //lastUpdated: new Date().toISOString() - time stamp is already taken when a version is created & that timestamp is used for identification. no need to repeat it here again.
     };
 
     if (!resumeData.fullName || !resumeData.email) {
@@ -41,6 +55,9 @@ document.getElementById("saveResume").addEventListener("click", async () => {
 
     const notes = document.getElementById("versionNotes").value || "Manual save";
     await createVersion(resumeData, notes);
+
+    //making sure to update preview immediately after new info is saved.
+    updatePreview();
 
     showStatus(statusEl, "success", "✓ Resume saved successfully!");
     document.getElementById("versionNotes").value = "";
@@ -58,14 +75,7 @@ document.getElementById("loadResume").addEventListener("click", async () => {
       return;
     }
     const r = result.currentResume;
-    document.getElementById("fullName").value   = r.fullName  || "";
-    document.getElementById("email").value      = r.email     || "";
-    document.getElementById("phone").value      = r.phone     || "";
-    document.getElementById("title").value      = r.title     || "";
-    document.getElementById("summary").value    = r.summary   || "";
-    document.getElementById("experience").value = JSON.stringify(r.experience || [], null, 2);
-    document.getElementById("education").value  = JSON.stringify(r.education  || [], null, 2);
-    document.getElementById("skills").value     = (r.skills || []).join(", ");
+    populateForm(r); 
     showStatus(statusEl, "success", "✓ Resume loaded!");
   } catch (err) {
     showStatus(statusEl, "error", `Error: ${err.message}`);
@@ -253,9 +263,82 @@ function populateForm(r) {
   document.getElementById("phone").value      = r.phone      || "";
   document.getElementById("title").value      = r.title      || "";
   document.getElementById("summary").value    = r.summary    || "";
-  document.getElementById("experience").value = JSON.stringify(r.experience || [], null, 2);
+  //document.getElementById("experience").value = JSON.stringify(r.experience || [], null, 2);
+  //instead of displaying JSON-stringified text, this will separate the company, title, and duration with commas, 
+  //and then the description will be separated with a new line 
+  document.getElementById("experience").value =
+    (r.experience || [])
+      .map(exp => {
+        const company  = exp?.company  || "";
+        const title    = exp?.title    || "";
+        const duration = exp?.duration || "";
+
+        return [company, title, duration]
+          .filter(Boolean)
+          .join(", ");
+      })
+    .join("\n");
   document.getElementById("education").value  = JSON.stringify(r.education  || [], null, 2);
   document.getElementById("skills").value     = (r.skills || []).join(", ");
+
+  updatePreview(); 
+}
+
+// -- Preview Tab - - Format resume data into a clean, copyable layout for pasting into job applications ----
+
+//Turns raw JSON data into human readable format for copy-paste into job applications
+function formatForApplication(data) {
+  let html = '<div class="formatted-resume">';
+
+  if (data.fullName) html += `<h2>${data.fullName}</h2>`;
+  if (data.title) html += `<h3>${data.title}</h3>`;
+  if (data.summary) html += `<p>${data.summary}</p>`;
+
+
+  if (data.experience?.length) {
+    html += `<h4>Experience</h4>`;
+    data.experience.forEach((exp) => {
+      html += `<p>- ${exp.title} at ${exp.company} (${exp.duration})</p>`;
+    });
+  }
+
+  if (data.education?.length) {
+    html += `<h4>Education</h4>`;
+    data.education.forEach((edu) => {
+      html += `<p>- ${edu.degree} from ${edu.school} (${edu.duration})</p>`;
+    });
+  }
+
+  if (data.skills?.length) {
+    html += `<h4>Skills</h4>`;
+    data.skills.forEach((skill) => {
+      html += `<p>- ${skill}</p>`;
+    });
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function updatePreview() {
+  const currentResume = {
+    fullName: document.getElementById("fullName").value,
+    title:    document.getElementById("title").value,
+    summary:  document.getElementById("summary").value,
+    experience: parseExperience(document.getElementById("experience").value) || [],
+    education:  parseEducation(document.getElementById("education").value) || [],
+    skills:     document.getElementById("skills").value.split(",").map(s => s.trim()).filter(s => s.length > 0)
+  };
+
+  const previewContainer = document.getElementById("formattedResume");
+  if (previewContainer) {
+    previewContainer.innerHTML = formatForApplication(currentResume);
+  }
+
+  //const displayContainer = document.getElementById("experienceDisplay");
+  //if (displayContainer) {
+    //displayContainer.innerHTML = formatForApplication(currentResume); 
+  //}
 }
 
 // ── Compare Tab — Quick Scan ─────────────────────────────────────────────────
@@ -389,11 +472,17 @@ async function loadVersionHistory() {
   }
 }
 
+//creates the actual version here!!
 async function createVersion(resumeData, notes) {
+  //resume versions: array storing all of the previously saved versions. 
+  //if it exists, we will store this new version there. otherwise, create new array
   const { resumeVersions } = await chrome.storage.local.get("resumeVersions");
   const versions = resumeVersions || [];
+  //unshift function: moves down the array & adds a new element at the 1st index. saving id, data, and timestamp
+  //cutoff: 20 versions. if more, remove the last element of the array.
   versions.unshift({ id: Date.now(), data: resumeData, notes, timestamp: new Date().toISOString() });
   if (versions.length > 20) versions.splice(20);
+  //
   await chrome.storage.local.set({ resumeVersions: versions });
 }
 
@@ -403,8 +492,12 @@ async function restoreVersion(versionId) {
     const version = (resumeVersions || []).find((v) => v.id === versionId);
     if (!version) { alert("Version not found"); return; }
     await chrome.storage.local.set({ currentResume: version.data });
-    await createVersion(version.data, `Restored from ${new Date(version.timestamp).toLocaleDateString()}`);
+    populateForm(version.data); 
+    //await createVersion(version.data, `Restored from ${new Date(version.timestamp).toLocaleDateString()}`);
     alert("✓ Version restored!");
+
+    //switch tabs to resume tab so user can see restored version right away
+    document.querySelector(".tab-btn[data-tab='resume']").click(); 
     loadVersionHistory();
   } catch (err) {
     alert(`Error: ${err.message}`);
@@ -580,3 +673,60 @@ function showStatus(el, type, message) {
 window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("loadResume").click();
 });
+
+// Button Helper
+// Ensure buttons register correctly and exists before adding event listeners to prevent issues with dynamically loaded content or missing elements.
+function ensureButtonRegistered(buttonId, callback) {
+  const button = document.getElementById(buttonId);
+  if (button) {
+    button.addEventListener("click", callback);
+  } else {
+    console.warn(`Button with ID "${buttonId}" not found.`);
+    return; 
+  }
+
+  button.addEventListener("click", async(event) => {
+    event.preventDefault();
+    try {
+      await callback();
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
+  });
+
+}
+
+//Parse through input and convert JSON into a JavaScript object. If the input is empty or invalid, return a default value (like an empty array). 
+// This makes it easier to handle user input without crashing the app due to bad JSON.
+function parseJSON(str) {
+  if (!str?.trim()) return [];
+  try {
+    return JSON.parse(str);
+  } catch (err) {
+    console.error("JSON parse error:", err);
+    console.error("Input string:", str);
+    console.error("Error message:", err.message);
+
+    alert (`Invalid JSON format: ${err.message}\nPlease check the console for details.`);
+    return [];
+  }
+}
+
+//parse through experience user input 
+//Allow users to input information without needing to use JSON format and separate information accordingly
+//only expecting three values. company, title, and duration.
+function parseExperience(text) {
+  return text.split("\n").map((line) => {
+    const [company, title, duration] = line.split(",").map((part) => part.trim());
+    return { company, title, duration };
+  });
+}
+
+//parse through education user input 
+//Allow users to input information without needing to use JSON format and separate information accordingly
+function parseEducation(text) {
+  return text.split("\n").map((line) => {
+    const [school, degree, duration] = line.split(",").map((part) => part.trim());
+    return { school, degree, duration };
+  });
+}

@@ -2,6 +2,7 @@
 //
 // All assets are bundled locally inside the extension (contextualize/ folder).
 // Nothing is fetched at runtime — no network calls, no downloads, no CDN.
+// Run `node setup.js` once from the extension root to populate contextualize/.
 
 let _pipeline = null;
 
@@ -11,7 +12,7 @@ export async function loadModel(onProgress) {
 
   onProgress?.(0, "Loading model…");
 
-  const vendorBase = chrome.runtime.getURL("contextualize");
+  const contextualizeBase = chrome.runtime.getURL("contextualize");
   const modelBase  = chrome.runtime.getURL("contextualize/model");
 
   // Import the bundled (local) Transformers.js
@@ -26,7 +27,7 @@ export async function loadModel(onProgress) {
   env.localModelPath    = modelBase + "/";
 
   // Point ONNX runtime at our bundled WASM binaries
-  env.backends.onnx.wasm.wasmPaths = vendorBase + "/";
+  env.backends.onnx.wasm.wasmPaths = contextualizeBase + "/";
 
   _pipeline = await pipeline(
     "feature-extraction",
