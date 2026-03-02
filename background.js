@@ -231,7 +231,7 @@ function sendResultsToPopup(results) {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
-  // ── Popup: upload resume ──────────────────────────────────────────────────
+  // Popup: upload resume
   if (request.action === "uploadResume") {
     handleUpload(request.resumeData)
       .then(() => sendResponse({ success: true }))
@@ -239,7 +239,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
-  // ── Popup: run comparison ─────────────────────────────────────────────────
+  // Popup: run comparison
   if (request.action === "runCompare") {
     handleCompare()
       .then((result) => {
@@ -250,7 +250,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
-  // ── Popup: view latest / stored data ─────────────────────────────────────
+  // Popup: view latest / stored data
   if (request.action === "viewLatest" || request.action === "viewStoredData") {
     loadFromStorage()
       .then((data) => sendResponse({ success: true, data }))
@@ -258,7 +258,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
-  // ── Scraper: deliver raw site data ────────────────────────────────────────
+  // Scraper: deliver raw site data
   // Scrapers call sendToBackground(raw) which maps to this message.
   if (request.action === "siteRawData") {
     saveToStorage({ rs_siteRaw: request.raw })
@@ -267,7 +267,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
-  // ── Legacy / popup direct-storage helpers (kept for compatibility) ────────
+  // Legacy / popup direct-storage helpers (kept for compatibility)
 
   if (request.action === "getResume") {
     chrome.storage.local.get("currentResume", (result) => {
