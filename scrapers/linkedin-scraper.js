@@ -4,12 +4,10 @@
   const FLOW_KEY  = "rs_flow";
   const STEP_KEY  = "rs_step";
   const QUEUE_KEY = "rs_queue";
-
   const HOME_KEY   = "rs_homeSnapshot";
   const CERTS_KEY  = "rs_certsResult";
   const SKILLS_KEY = "rs_skillsResult";
   const EDU_KEY    = "rs_eduResult";
-
   const FLOW_NAME     = "LINKEDIN_DEEP";
   const STEP_FINALIZE = "FINALIZE";
 
@@ -18,10 +16,9 @@
     certifications: "details/certifications/",
     skills: "details/skills/",
     education: "details/education/",
-  //we can add more later while making this one and testing on profiles i found out that project and experience have a detail page too 
+  //we can add more later
   };
 
-  // Stable selector validated for cert cards
   const CERT_BTN_SEL = '[data-view-name="license-certifications-see-license-button"]';
 
   // ── Utilities ─────────────────────────────────────────────────────────────
@@ -114,7 +111,7 @@
     getSectionByViewName("profile-card-licenses-and-certifications") ||
     getSectionByHeading(/licenses|certifications/i);
 
-  // ── Top-card ──────────────────────────────────────────────────────────────
+  //  Top card 
   function getFullName() {
     const top = document.querySelector('[data-view-name="profile-top-card-verified-badge"]') || document;
     return (
@@ -125,7 +122,7 @@
     );
   }
 
-  // ── Show-all detection ─────────────────────────────────────────────────────
+  // ── Show all detection 
   function hasShowAllIn(section, { dataViewName, ariaLabel, hrefContains } = {}) {
     if (!section) return false;
 
@@ -306,7 +303,7 @@
       .map((skill) => ({ skill }));
   }
 
-  // Projects + Experience (kept simple; uses existing working logic pattern)
+  // Projects and Experience 
   const isDateRange = (s) =>
     /\b(19|20)\d{2}\b/.test(clean(s)) &&
     (/\bPresent\b/i.test(s) || /[–—-]/.test(s) || /\bto\b/i.test(s) || /(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i.test(s));
@@ -512,7 +509,7 @@
 
   handleFlowOnLoad();
 
-  // ── Popup command entrypoint ───────────────────────────────────────────────
+  // ── Popup command  ───────────────────────────────────────────────
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.cmd !== "START_CERTS_SKILLS_FLOW") return;
 
@@ -525,7 +522,7 @@
 
       const { plan, queue } = getShowAllPlan(baseUrl);
 
-      // If "Show all" exists, defer scraping that section to /details/*
+      // If "Show all" exists, do scraping that section to /details/*
       const skip = {
         certifications: plan.certifications.hasShowAll,
         skills: plan.skills.hasShowAll,
@@ -567,7 +564,7 @@
       sendResponse({ success: false, error: err?.message || String(err) });
     });
 
-    return true; // async response
+    return true; 
   });
 
    if (window.location.href.includes("linkedin.com/in/")) {
