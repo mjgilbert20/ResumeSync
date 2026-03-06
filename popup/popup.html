@@ -49,24 +49,22 @@
           <input type="email" id="email" placeholder="john@example.com">
         </div>
         <div class="form-group">
-          <label>Phone</label>
-          <input type="tel" id="phone" placeholder="+1 234-567-8900">
-        </div>
-        <div class="form-group">
-          <label>Current Title</label>
-          <input type="text" id="title" placeholder="Software Engineer">
-        </div>
-        <div class="form-group">
           <label>Summary</label>
           <textarea id="summary" rows="4" placeholder="Professional summary..."></textarea>
         </div>
         <div class="form-group">
-          <label>Experience <span class="label-hint"> (Include "Company, Title, Duration)</span></label>
-          <textarea id="experience" rows="6" placeholder='Enter experience details'></textarea>
+          <label>Experience</label>
+          <div class="card-section">
+            <button id="addExp" class="btn btn-small btn-add-card">+ Add Experience</button>
+            <div id="expList" class="card-list"></div>
+          </div>
         </div>
         <div class="form-group">
-          <label>Education <span class="label-hint">(Include "University, Degree, Duration)</span></label>
-          <textarea id="education" rows="4" placeholder='Enter education details'></textarea>
+          <label>Education</label>
+          <div class="card-section">
+            <button id="addEdu" class="btn btn-small btn-add-card">+ Add Education</button>
+            <div id="eduList" class="card-list"></div>
+          </div>
         </div>
         <div class="form-group">
           <label>Skills <span class="label-hint">(comma-separated)</span></label>
@@ -160,6 +158,56 @@
       </div>
     </div>
   </div>
+
+  <!-- Experience card template -->
+  <template id="tpl-exp">
+    <div class="entry-card">
+      <button class="card-delete-btn" aria-label="Remove">×</button>
+      <div class="card-row">
+        <div class="card-field">
+          <label>Company</label>
+          <input type="text" data-key="company" placeholder="Acme Corp">
+        </div>
+        <div class="card-field">
+          <label>Duration</label>
+          <input type="text" data-key="duration" placeholder="2021 – Present">
+        </div>
+      </div>
+      <div class="card-field">
+        <label>Role</label>
+        <input type="text" data-key="title" placeholder="Software Engineer">
+      </div>
+      <div class="card-field">
+        <label>Details</label>
+        <textarea data-key="description" rows="2" placeholder="Key achievements and responsibilities…"></textarea>
+      </div>
+    </div>
+  </template>
+
+  <!-- Education card template -->
+  <template id="tpl-edu">
+    <div class="entry-card">
+      <button class="card-delete-btn" aria-label="Remove">×</button>
+      <div class="card-row">
+        <div class="card-field">
+          <label>Institution</label>
+          <input type="text" data-key="school" placeholder="MIT">
+        </div>
+        <div class="card-field">
+          <label>Graduation Year</label>
+          <input type="text" data-key="year" placeholder="2014 – 2018">
+        </div>
+      </div>
+      <div class="card-field">
+        <label>Degree</label>
+        <input type="text" data-key="degree" placeholder="B.S. Computer Science">
+      </div>
+      <div class="card-field">
+        <label>Details</label>
+        <textarea data-key="notes" rows="2" placeholder="GPA, honors, relevant coursework…"></textarea>
+      </div>
+    </div>
+  </template>
 
   <script src="../parse/pdf-extract.js"></script>
   <script type="module" src="../contextualize/js/semantic-ui.js"></script>
