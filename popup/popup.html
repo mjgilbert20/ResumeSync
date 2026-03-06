@@ -27,15 +27,13 @@
         <!-- Import / Export -->
         <div class="import-block">
           <p class="help-text">
-            <strong>Import</strong> a previously exported <code>.json</code> file to restore all
-            fields instantly, a plain-text <code>.txt</code> resume, or a <code>.pdf</code> resume
-            to auto-parse name, email, phone, summary, and skills.
+            <strong>Import</strong> a previously exported <code>.json</code> file to restore all fields.
           </p>
           <!-- Hidden real file input -->
-          <input type="file" id="resumeFileInput" accept=".json,.txt,.pdf" style="display:none">
+          <input type="file" id="resumeFileInput" accept=".json" style="display:none">
           <div class="button-group">
-            <button id="importResumeBtn" class="btn btn-accent">📤 Import Resume File</button>
-            <button id="exportResumeBtn" class="btn btn-secondary">📥 Export as JSON</button>
+            <button id="importResumeBtn" class="btn btn-accent">📤 Import Resume JSON</button>
+            <button id="exportResumeBtn" class="btn btn-secondary">📥 Export Data as JSON</button>
           </div>
           <div id="importStatus" class="status-message"></div>
         </div>
