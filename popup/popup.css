@@ -298,6 +298,114 @@ header h1 { font-size: 20px; font-weight: 600; }
   margin-top: 16px;
 }
 
+/* ── Card-based entry system ── */
+.card-section {
+  margin-top: 10px;
+}
+
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.entry-card {
+  position: relative;
+  background: #f8f9fa;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  padding: 14px;
+  animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: #95a5a6;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+  border-radius: 4px;
+}
+
+.card-delete-btn:hover {
+  color: #fc5c65;
+  background: rgba(252, 92, 101, 0.1);
+}
+
+.card-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.card-row .card-field {
+  flex: 1;
+}
+
+.card-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.card-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.card-field input,
+.card-field textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #e1e8ed;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.card-field input:focus,
+.card-field textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.card-field textarea {
+  resize: vertical;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+}
+
+.btn-add-card {
+  background: white;
+  border: 1px dashed #e1e8ed;
+  color: #657786;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+.btn-add-card:hover {
+  border-color: #667eea;
+  color: #667eea;
+  background: #f5f7fa;
+}
+
 /* ── Overall score card ── */
 .smart-overall {
   display: flex;
