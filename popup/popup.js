@@ -46,6 +46,24 @@ function collectCards(listId) {
     .filter(obj => Object.values(obj).some(v => v));
 }
 
+function sortEducation(eduCards) {
+  return eduCards.map(edu => ({
+    year: edu.year || "",
+    school: edu.school || "",
+    degree: edu.degree || "",
+    notes: edu.notes || ""
+  }));
+}
+
+function sortExperience(expCards) {
+  return expCards.map(exp => ({
+    duration: exp.duration || "",
+    company: exp.company || "",
+    title: exp.title || "",
+    description: exp.description || ""
+  }));
+}
+
 document.getElementById("addExp").addEventListener("click", () => appendCard("expList", "tpl-exp"));
 document.getElementById("addEdu").addEventListener("click", () => appendCard("eduList", "tpl-edu"));
 
@@ -60,8 +78,8 @@ document.getElementById("saveResume").addEventListener("click", async () => {
       fullName:    document.getElementById("fullName").value.trim(),
       email:       document.getElementById("email").value.trim(),
       summary:     document.getElementById("summary").value.trim(),
-      experience:  collectCards("expList"),
-      education:   collectCards("eduList"),
+      education:   sortEducation(collectCards("eduList")),
+      experience:  sortExperience(collectCards("expList")),
       skills:      document.getElementById("skills").value.split(",").map((s) => s.trim()).filter(Boolean),
     };
 
@@ -185,7 +203,7 @@ document.getElementById("exportResumeBtn").addEventListener("click", async () =>
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement("a");
     a.href     = url;
-    a.download = `resumesync-${(currentResume.fullName || "resume").replace(/\s+/g, "_")}.json`;
+    a.download = `ResumeSync - ${(currentResume.fullName || "Resume").replace(/\s+/g, "_")}.json`;
     a.click();
     URL.revokeObjectURL(url);
     showStatus(statusEl, "success", "✓ Resume exported!");
@@ -193,82 +211,6 @@ document.getElementById("exportResumeBtn").addEventListener("click", async () =>
     showStatus(statusEl, "error", `Export failed: ${err.message}`);
   }
 });
-
-// ── Plain-text resume parser ─────────────────────────────────────────────────
-// Heuristic: find section headers (ALL CAPS or known keywords), split content
-// under each header, extract email/phone via regex from the full text.
-
-function parsePlainTextResume(text) {
-  const lines = text.split(/\r?\n/);
-
-  // Regex patterns
-  const emailRe  = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/;
-  const phoneRe  = /(\+?1[\s.-]?)?\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/;
-
-  // Known section header keywords (order matters — more specific first)
-  const SECTION_PATTERNS = [
-    { key: "summary",    re: /^(summary|professional\s+summary|objective|profile|about\s+me)/i },
-    { key: "experience", re: /^(experience|work\s+experience|employment|work\s+history|professional\s+experience)/i },
-    { key: "education",  re: /^(education|academic|academics|schooling|degrees?)/i },
-    { key: "skills",     re: /^(skills|technical\s+skills|core\s+competencies|competencies|technologies|tools)/i },
-    { key: "certs",      re: /^(certifications?|licen[sc]es?|credentials?)/i },
-  ];
-
-  // Identify which line numbers are section headers
-  const sectionStarts = []; // [{ key, lineIndex }]
-  lines.forEach((line, i) => {
-    const trimmed = line.trim();
-    if (!trimmed) return;
-    for (const { key, re } of SECTION_PATTERNS) {
-      // Match if the line IS (or STARTS WITH) a keyword, or is a short all-caps line
-      const isAllCaps = trimmed === trimmed.toUpperCase() && trimmed.length > 2 && /[A-Z]/.test(trimmed);
-      if (re.test(trimmed) || (isAllCaps && SECTION_PATTERNS.some((p) => p.re.test(trimmed)))) {
-        sectionStarts.push({ key, lineIndex: i });
-        break;
-      }
-    }
-  });
-
-  // Extract text between section boundaries
-  function extractSection(key) {
-    const entry = sectionStarts.find((s) => s.key === key);
-    if (!entry) return "";
-    const nextEntry = sectionStarts.find((s) => s.lineIndex > entry.lineIndex);
-    const end = nextEntry ? nextEntry.lineIndex : lines.length;
-    return lines
-      .slice(entry.lineIndex + 1, end)
-      .map((l) => l.trim())
-      .filter(Boolean)
-      .join("\n");
-  }
-
-  // Name: first non-empty line before any section header, that isn't an email/phone
-  const firstSectionLine = sectionStarts.length ? sectionStarts[0].lineIndex : lines.length;
-  const nameCandidate = lines
-    .slice(0, firstSectionLine)
-    .map((l) => l.trim())
-    .find((l) => l && !emailRe.test(l) && !phoneRe.test(l) && l.length < 80);
-
-  // Email: scan full text
-  const fullText = text;
-  const emailMatch = fullText.match(emailRe);
-
-  // Skills section: split on commas, bullets (•, -, *), newlines
-  const skillsRaw = extractSection("skills");
-  const skills = skillsRaw
-    .split(/[,\n•\-\*]+/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 1 && s.length < 60);
-
-  return {
-    fullName:   nameCandidate  || "",
-    email:      emailMatch?.[0] || "",
-    summary:    extractSection("summary"),
-    experience: [],                          // structured data can't be reliably parsed from text
-    education:  [],
-    skills
-  };
-}
 
 // ── Populate all form fields from a parsed object ────────────────────────────
 function populateForm(r) {
@@ -295,7 +237,8 @@ function formatForApplication(data) {
   let html = '<div class="formatted-resume">';
 
   if (data.fullName) html += `<h2>${data.fullName}</h2>`;
-  if (data.summary) html += `<p>${data.summary}</p>`;
+  if (data.email)    html += `<p>Email: ${data.email}</p>`;
+  if (data.summary)  html += `<p>${data.summary}</p>`;
 
 
   if (data.experience?.length) {
@@ -308,7 +251,7 @@ function formatForApplication(data) {
   if (data.education?.length) {
     html += `<h4>Education</h4>`;
     data.education.forEach((edu) => {
-      html += `<p>- ${edu.degree} from ${edu.school} (${edu.duration})</p>`;
+      html += `<p>- ${edu.degree} from ${edu.school} (${edu.year})</p>`;
     });
   }
 
@@ -326,6 +269,7 @@ function formatForApplication(data) {
 function updatePreview() {
   const currentResume = {
     fullName: document.getElementById("fullName").value,
+    email:    document.getElementById("email").value,
     summary:  document.getElementById("summary").value,
     experience: collectCards("expList"),
     education:  collectCards("eduList"),
@@ -452,7 +396,7 @@ async function loadVersionHistory() {
           </div>
           ${v.notes ? `<div class="version-notes">"${v.notes}"</div>` : ""}
           <div class="version-summary">
-            ${v.data.fullName || "Unnamed"} | ${(v.data.skills || []).length} skills
+            ${v.data.fullName || "Unnamed"} | ${(v.data.experience || []).length} experiences | ${(v.data.skills || []).length} skills
           </div>
         </div>
       `;
