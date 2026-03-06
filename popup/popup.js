@@ -15,35 +15,54 @@ document.querySelectorAll(".tab-btn").forEach((button) => {
   });
 });
 
+// ── Entry card helpers ───────────────────────────────────────────────────────
+
+function makeCard(templateId) {
+  const frag = document.getElementById(templateId).content.cloneNode(true);
+  frag.querySelector(".card-delete-btn").addEventListener("click", e => {
+    e.target.closest(".entry-card").remove();
+  });
+  return frag;
+}
+
+function appendCard(listId, templateId, data = {}) {
+  const frag = makeCard(templateId);
+  const card = frag.querySelector(".entry-card");
+  card.querySelectorAll("[data-key]").forEach(el => {
+    el.value = data[el.dataset.key] || "";
+  });
+  document.getElementById(listId).appendChild(frag);
+}
+
+function collectCards(listId) {
+  return [...document.getElementById(listId).querySelectorAll(".entry-card")]
+    .map(card => {
+      const obj = {};
+      card.querySelectorAll("[data-key]").forEach(el => {
+        obj[el.dataset.key] = el.value.trim();
+      });
+      return obj;
+    })
+    .filter(obj => Object.values(obj).some(v => v));
+}
+
+document.getElementById("addExp").addEventListener("click", () => appendCard("expList", "tpl-exp"));
+document.getElementById("addEdu").addEventListener("click", () => appendCard("eduList", "tpl-edu"));
+
 // ── Resume Tab ───────────────────────────────────────────────────────────────
 
 //resume is being saved as a version, with metadata of the version, structured object (containing parsed info), and time stamp.
 document.getElementById("saveResume").addEventListener("click", async () => {
   const statusEl = document.getElementById("saveStatus");
 
-  //new parsing logic for experience and education fields. users can input in a structured format (company | title | duration) per line, which is then parsed into an array of objects. this allows for more consistent data handling and better comparison later on.
-  const experienceInput = document.getElementById("experience").value;
-  const educationInput = document.getElementById("education").value;
-
-  const experienceData = parseExperience(experienceInput);
-  const educationData = parseEducation(educationInput);
-
-  if (experienceData == null || educationData == null) {
-    showStatus(statusEl, "error", "Invalid format for experience or education. Please use 'Company | Title | Duration' per line.");
-    return;
-  }
-  
   try {
     const resumeData = {
-      fullName:    document.getElementById("fullName").value,
-      email:       document.getElementById("email").value,
-      phone:       document.getElementById("phone").value,
-      title:       document.getElementById("title").value,
-      summary:     document.getElementById("summary").value,
-      experience:  experienceData,
-      education:   educationData,
+      fullName:    document.getElementById("fullName").value.trim(),
+      email:       document.getElementById("email").value.trim(),
+      summary:     document.getElementById("summary").value.trim(),
+      experience:  collectCards("expList"),
+      education:   collectCards("eduList"),
       skills:      document.getElementById("skills").value.split(",").map((s) => s.trim()).filter(Boolean),
-      //lastUpdated: new Date().toISOString() - time stamp is already taken when a version is created & that timestamp is used for identification. no need to repeat it here again.
     };
 
     if (!resumeData.fullName || !resumeData.email) {
@@ -111,8 +130,6 @@ document.getElementById("resumeFileInput").addEventListener("change", async (e) 
       parsed = {
         fullName:   raw.fullName   || raw.name        || "",
         email:      raw.email                          || "",
-        phone:      raw.phone                          || "",
-        title:      raw.title      || raw.headline     || "",
         summary:    raw.summary    || raw.about        || "",
         experience: raw.experience || [],
         education:  raw.education  || [],
@@ -232,10 +249,9 @@ function parsePlainTextResume(text) {
     .map((l) => l.trim())
     .find((l) => l && !emailRe.test(l) && !phoneRe.test(l) && l.length < 80);
 
-  // Email and phone: scan full text
+  // Email: scan full text
   const fullText = text;
   const emailMatch = fullText.match(emailRe);
-  const phoneMatch = fullText.match(phoneRe);
 
   // Skills section: split on commas, bullets (•, -, *), newlines
   const skillsRaw = extractSection("skills");
@@ -247,8 +263,6 @@ function parsePlainTextResume(text) {
   return {
     fullName:   nameCandidate  || "",
     email:      emailMatch?.[0] || "",
-    phone:      phoneMatch?.[0] || "",
-    title:      "",                          // hard to infer reliably; user fills in
     summary:    extractSection("summary"),
     experience: [],                          // structured data can't be reliably parsed from text
     education:  [],
@@ -260,38 +274,16 @@ function parsePlainTextResume(text) {
 function populateForm(r) {
   document.getElementById("fullName").value   = r.fullName   || "";
   document.getElementById("email").value      = r.email      || "";
-  document.getElementById("phone").value      = r.phone      || "";
-  document.getElementById("title").value      = r.title      || "";
   document.getElementById("summary").value    = r.summary    || "";
-  //document.getElementById("experience").value = JSON.stringify(r.experience || [], null, 2);
-  //instead of displaying JSON-stringified text, this will separate the company, title, and duration with commas, 
-  //and then the description will be separated with a new line 
-  document.getElementById("experience").value =
-    (r.experience || [])
-      .map(exp => {
-        const company  = exp?.company  || "";
-        const title    = exp?.title    || "";
-        const duration = exp?.duration || "";
-
-        return [company, title, duration]
-          .filter(Boolean)
-          .join(", ");
-      })
-    .join("\n");
-  //document.getElementById("education").value  = JSON.stringify(r.education  || [], null, 2);
-  document.getElementById("education").value =
-    (r.education || [])
-      .map(exp => {
-        const school  = exp?.school  || "";
-        const degree  = exp?.degree    || "";
-        const duration = exp?.duration || "";
-
-        return [school, degree, duration]
-          .filter(Boolean)
-          .join(", ");
-      })
-    .join("\n");
   document.getElementById("skills").value     = (r.skills || []).join(", ");
+
+  // Clear and populate experience cards
+  document.getElementById("expList").innerHTML = "";
+  (r.experience || []).forEach(item => appendCard("expList", "tpl-exp", item));
+
+  // Clear and populate education cards
+  document.getElementById("eduList").innerHTML = "";
+  (r.education || []).forEach(item => appendCard("eduList", "tpl-edu", item));
 
   updatePreview(); 
 }
@@ -303,7 +295,6 @@ function formatForApplication(data) {
   let html = '<div class="formatted-resume">';
 
   if (data.fullName) html += `<h2>${data.fullName}</h2>`;
-  if (data.title) html += `<h3>${data.title}</h3>`;
   if (data.summary) html += `<p>${data.summary}</p>`;
 
 
@@ -335,10 +326,9 @@ function formatForApplication(data) {
 function updatePreview() {
   const currentResume = {
     fullName: document.getElementById("fullName").value,
-    title:    document.getElementById("title").value,
     summary:  document.getElementById("summary").value,
-    experience: parseExperience(document.getElementById("experience").value) || [],
-    education:  parseEducation(document.getElementById("education").value) || [],
+    experience: collectCards("expList"),
+    education:  collectCards("eduList"),
     skills:     document.getElementById("skills").value.split(",").map(s => s.trim()).filter(s => s.length > 0)
   };
 
@@ -346,11 +336,6 @@ function updatePreview() {
   if (previewContainer) {
     previewContainer.innerHTML = formatForApplication(currentResume);
   }
-
-  //const displayContainer = document.getElementById("experienceDisplay");
-  //if (displayContainer) {
-    //displayContainer.innerHTML = formatForApplication(currentResume); 
-  //}
 }
 
 // ── Compare Tab — Quick Scan ─────────────────────────────────────────────────
@@ -467,7 +452,7 @@ async function loadVersionHistory() {
           </div>
           ${v.notes ? `<div class="version-notes">"${v.notes}"</div>` : ""}
           <div class="version-summary">
-            ${v.data.fullName || "Unnamed"} | ${v.data.title || "No title"} | ${(v.data.skills || []).length} skills
+            ${v.data.fullName || "Unnamed"} | ${(v.data.skills || []).length} skills
           </div>
         </div>
       `;
@@ -534,7 +519,6 @@ async function deleteVersion(versionId) {
 function compareResumeToProfile(resume, profile) {
   return {
     name:       compareField(resume.fullName,  profile.name,    "Name"),
-    title:      compareField(resume.title,     profile.title,   "Title"),
     summary:    compareField(resume.summary,   profile.summary, "Summary"),
     experience: compareArrays(resume.experience, profile.experience),
     education:  compareArrays(resume.education,  profile.education),
