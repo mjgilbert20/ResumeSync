@@ -32,8 +32,8 @@
           <!-- Hidden real file input -->
           <input type="file" id="resumeFileInput" accept=".json" style="display:none">
           <div class="button-group">
-            <button id="importResumeBtn" class="btn btn-accent">📤 Import Resume JSON</button>
-            <button id="exportResumeBtn" class="btn btn-secondary">📥 Export Data as JSON</button>
+            <button id="importResumeBtn" class="btn btn-accent">📤 Import .JSON</button>
+            <button id="exportResumeBtn" class="btn btn-secondary">📥 Export .JSON</button>
           </div>
           <div id="importStatus" class="status-message"></div>
         </div>
@@ -51,17 +51,17 @@
           <textarea id="summary" rows="4" placeholder="Professional summary..."></textarea>
         </div>
         <div class="form-group">
-          <label>Experience</label>
+          <label>Education</label>
           <div class="card-section">
-            <button id="addExp" class="btn btn-small btn-add-card">+ Add Experience</button>
-            <div id="expList" class="card-list"></div>
+            <div id="eduList" class="card-list"></div>
+            <button id="addEdu" class="btn btn-small btn-add-card">+ Add Education</button>
           </div>
         </div>
         <div class="form-group">
-          <label>Education</label>
+          <label>Experience</label>
           <div class="card-section">
-            <button id="addEdu" class="btn btn-small btn-add-card">+ Add Education</button>
-            <div id="eduList" class="card-list"></div>
+            <div id="expList" class="card-list"></div>
+            <button id="addExp" class="btn btn-small btn-add-card">+ Add Experience</button>
           </div>
         </div>
         <div class="form-group">
@@ -87,8 +87,8 @@
          <h2>Resume Preview</h2>
          <p class="help-text">
            Copy and paste this formatted version of your resume directly into job applications,
-           LinkedIn profiles, or anywhere else you need a polished resume. It updates in real-time
-           as you edit your data in the Resume tab.
+           LinkedIn profiles, or anywhere else you need a polished resume. Updates are made when 
+           you save in the Resume tab.
          </p>
          <div id="formattedResume" class="formatted-resume"></div>
        </div>
@@ -157,31 +157,6 @@
     </div>
   </div>
 
-  <!-- Experience card template -->
-  <template id="tpl-exp">
-    <div class="entry-card">
-      <button class="card-delete-btn" aria-label="Remove">×</button>
-      <div class="card-row">
-        <div class="card-field">
-          <label>Company</label>
-          <input type="text" data-key="company" placeholder="Acme Corp">
-        </div>
-        <div class="card-field">
-          <label>Duration</label>
-          <input type="text" data-key="duration" placeholder="2021 – Present">
-        </div>
-      </div>
-      <div class="card-field">
-        <label>Role</label>
-        <input type="text" data-key="title" placeholder="Software Engineer">
-      </div>
-      <div class="card-field">
-        <label>Details</label>
-        <textarea data-key="description" rows="2" placeholder="Key achievements and responsibilities…"></textarea>
-      </div>
-    </div>
-  </template>
-
   <!-- Education card template -->
   <template id="tpl-edu">
     <div class="entry-card">
@@ -192,7 +167,7 @@
           <input type="text" data-key="school" placeholder="MIT">
         </div>
         <div class="card-field">
-          <label>Graduation Year</label>
+          <label>Years</label>
           <input type="text" data-key="year" placeholder="2014 – 2018">
         </div>
       </div>
@@ -203,6 +178,31 @@
       <div class="card-field">
         <label>Details</label>
         <textarea data-key="notes" rows="2" placeholder="GPA, honors, relevant coursework…"></textarea>
+      </div>
+    </div>
+  </template>
+
+  <!-- Experience card template -->
+  <template id="tpl-exp">
+    <div class="entry-card">
+      <button class="card-delete-btn" aria-label="Remove">×</button>
+      <div class="card-row">
+        <div class="card-field">
+          <label>Company</label>
+          <input type="text" data-key="company" placeholder="Acme Corp">
+        </div>
+        <div class="card-field">
+          <label>Years</label>
+          <input type="text" data-key="duration" placeholder="2021 – Present">
+        </div>
+      </div>
+      <div class="card-field">
+        <label>Role</label>
+        <input type="text" data-key="title" placeholder="Software Engineer">
+      </div>
+      <div class="card-field">
+        <label>Details</label>
+        <textarea data-key="description" rows="2" placeholder="Key achievements and responsibilities…"></textarea>
       </div>
     </div>
   </template>

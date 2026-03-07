@@ -147,33 +147,16 @@ document.getElementById("resumeFileInput").addEventListener("change", async (e) 
       // If it looks like our own export (has fullName or name at top level) use it directly
       parsed = {
         fullName:   raw.fullName   || raw.name        || "",
-        email:      raw.email                          || "",
-        summary:    raw.summary    || raw.about        || "",
-        experience: raw.experience || [],
+        email:      raw.email                         || "",
+        summary:    raw.summary    || raw.about       || "",
         education:  raw.education  || [],
+        experience: raw.experience || [],
         skills:     Array.isArray(raw.skills)
                       ? raw.skills
                       : typeof raw.skills === "string"
                         ? raw.skills.split(",").map((s) => s.trim()).filter(Boolean)
                         : []
       };
-
-    } else if (file.name.endsWith(".pdf")) {
-      // ── PDF import ───────────────────────────────────────────────────────
-      showStatus(statusEl, "info", "Extracting text from PDF…");
-      const buffer = await file.arrayBuffer();
-      let pdfText;
-      try {
-        pdfText = await PDFExtract.extractText(buffer);
-      } catch (pdfErr) {
-        showStatus(statusEl, "error", `PDF error: ${pdfErr.message}`);
-        return;
-      }
-      parsed = parsePlainTextResume(pdfText);
-
-    } else if (file.name.endsWith(".txt")) {
-      // ── Plain-text heuristic parser ──────────────────────────────────────
-      parsed = parsePlainTextResume(text);
 
     } else {
       showStatus(statusEl, "error", "Unsupported file type. Use .json, .txt, or .pdf");
@@ -219,13 +202,13 @@ function populateForm(r) {
   document.getElementById("summary").value    = r.summary    || "";
   document.getElementById("skills").value     = (r.skills || []).join(", ");
 
-  // Clear and populate experience cards
-  document.getElementById("expList").innerHTML = "";
-  (r.experience || []).forEach(item => appendCard("expList", "tpl-exp", item));
-
   // Clear and populate education cards
   document.getElementById("eduList").innerHTML = "";
   (r.education || []).forEach(item => appendCard("eduList", "tpl-edu", item));
+
+  // Clear and populate experience cards
+  document.getElementById("expList").innerHTML = "";
+  (r.experience || []).forEach(item => appendCard("expList", "tpl-exp", item));
 
   updatePreview(); 
 }
@@ -237,26 +220,25 @@ function formatForApplication(data) {
   let html = '<div class="formatted-resume">';
 
   if (data.fullName) html += `<h2>${data.fullName}</h2>`;
-  if (data.email)    html += `<p>Email: ${data.email}</p>`;
-  if (data.summary)  html += `<p>${data.summary}</p>`;
+  if (data.email)    html += `<p><strong>Email:</strong> ${data.email}</p>`;
+  if (data.summary)  html += `<p><strong>Summary:</strong>\n ${data.summary}</p>`;
 
-
-  if (data.experience?.length) {
-    html += `<h4>Experience</h4>`;
-    data.experience.forEach((exp) => {
-      html += `<p>- ${exp.title} at ${exp.company} (${exp.duration})</p>`;
+  if (data.education?.length) {
+    html += `<h3>Education</h3>`;
+    data.education.forEach((edu) => {
+      html += `<p>- <strong>${edu.degree}</strong> from <strong>${edu.school}</strong> (${edu.year})</p>`;
     });
   }
 
-  if (data.education?.length) {
-    html += `<h4>Education</h4>`;
-    data.education.forEach((edu) => {
-      html += `<p>- ${edu.degree} from ${edu.school} (${edu.year})</p>`;
+  if (data.experience?.length) {
+    html += `<h3>Experience</h3>`;
+    data.experience.forEach((exp) => {
+      html += `<p>- <strong>${exp.title}</strong> at <strong>${exp.company}</strong> (${exp.duration})</p>`;
     });
   }
 
   if (data.skills?.length) {
-    html += `<h4>Skills</h4>`;
+    html += `<h3>Skills</h3>`;
     data.skills.forEach((skill) => {
       html += `<p>- ${skill}</p>`;
     });
@@ -271,8 +253,8 @@ function updatePreview() {
     fullName: document.getElementById("fullName").value,
     email:    document.getElementById("email").value,
     summary:  document.getElementById("summary").value,
-    experience: collectCards("expList"),
     education:  collectCards("eduList"),
+    experience: collectCards("expList"),
     skills:     document.getElementById("skills").value.split(",").map(s => s.trim()).filter(s => s.length > 0)
   };
 
@@ -464,8 +446,8 @@ function compareResumeToProfile(resume, profile) {
   return {
     name:       compareField(resume.fullName,  profile.name,    "Name"),
     summary:    compareField(resume.summary,   profile.summary, "Summary"),
-    experience: compareArrays(resume.experience, profile.experience),
     education:  compareArrays(resume.education,  profile.education),
+    experience: compareArrays(resume.experience, profile.experience),
     skills:     compareSkills(resume.skills,     profile.skills)
   };
 }
@@ -652,6 +634,15 @@ function parseJSON(str) {
   }
 }
 
+//parse through education user input 
+//Allow users to input information without needing to use JSON format and separate information accordingly
+function parseEducation(text) {
+  return text.split("\n").map((line) => {
+    const [school, degree, duration] = line.split(",").map((part) => part.trim());
+    return { school, degree, duration };
+  });
+}
+
 //parse through experience user input 
 //Allow users to input information without needing to use JSON format and separate information accordingly
 //only expecting three values. company, title, and duration.
@@ -659,14 +650,5 @@ function parseExperience(text) {
   return text.split("\n").map((line) => {
     const [company, title, duration] = line.split(",").map((part) => part.trim());
     return { company, title, duration };
-  });
-}
-
-//parse through education user input 
-//Allow users to input information without needing to use JSON format and separate information accordingly
-function parseEducation(text) {
-  return text.split("\n").map((line) => {
-    const [school, degree, duration] = line.split(",").map((part) => part.trim());
-    return { school, degree, duration };
   });
 }
