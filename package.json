@@ -1,0 +1,15 @@
+{
+  "name": "resumesync",
+  "version": "1.0.0",
+  "description": "**Team Members:**  \r - Abhigna Nimmagadda  \r - Isha Rajpure  \r - Kevin Garcia  \r - Michael Gilbert  \r - Soha Khan",
+  "main": "background.js",
+  "scripts": {
+    "test": "npx playwright test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}
