@@ -101,14 +101,12 @@
   // ── Summary/About extraction ──────────────────────────────────────────────
   function scrapeSummary() {
     let summary = "";
-    
     // Try specific selectors first
     summary = document.querySelector('[data-view-name="about"] p')?.textContent?.trim() || "";
     if (summary) {
       console.log("[ResumeSync] Summary found via about data-view-name");
       return clean(summary).substring(0, 1000);
     }
-    
     // Try to find summary section by heading
     const aboutSection = getSectionByHeading(/^about$/i) || getSectionByHeading(/about|biography|bio/i);
     if (aboutSection) {
@@ -118,15 +116,15 @@
         console.log("[ResumeSync] Summary found via heading scan");
         return clean(summary).substring(0, 1000);
       }
+      // Fallback: log section HTML for debugging
+      console.log("[ResumeSync] About section HTML:", aboutSection.innerHTML);
     }
-    
-    // Another specific selector approach
+    // Try profile-intro
     summary = document.querySelector('[data-view-name="profile-intro"] p')?.textContent?.trim() || "";
     if (summary) {
       console.log("[ResumeSync] Summary found via profile-intro");
       return clean(summary).substring(0, 1000);
     }
-    
     // Try looking for text in the about section div
     const aboutDiv = document.querySelector('[data-view-name="about"]');
     if (aboutDiv) {
@@ -136,8 +134,37 @@
         console.log("[ResumeSync] Summary found via about div text");
         return clean(summary).substring(0, 1000);
       }
+      // Log aboutDiv HTML for debugging
+      console.log("[ResumeSync] About div HTML:", aboutDiv.innerHTML);
     }
-    
+    // Try generic selectors: look for any section/div with 'about' in heading
+    const main = document.querySelector("main") || document.body;
+    const allSections = main.querySelectorAll("section, div");
+    for (let s of allSections) {
+      const heading = s.querySelector("h2, h3, h4, h5");
+      if (heading && /about|summary|biography|bio/i.test(heading.textContent)) {
+        const text = s.textContent.trim();
+        if (text.length > 50) {
+          summary = text;
+          console.log("[ResumeSync] Summary found via generic section scan");
+          return clean(summary).substring(0, 1000);
+        }
+        // Log section HTML for debugging
+        console.log("[ResumeSync] Generic about section HTML:", s.innerHTML);
+      }
+    }
+    // Try any p element with 'about' or 'summary' in previous sibling
+    const ps = main.querySelectorAll("p");
+    for (let p of ps) {
+      const prev = p.previousElementSibling;
+      if (prev && /about|summary|biography|bio/i.test(prev.textContent)) {
+        summary = p.textContent.trim();
+        if (summary.length > 50) {
+          console.log("[ResumeSync] Summary found via p sibling scan");
+          return clean(summary).substring(0, 1000);
+        }
+      }
+    }
     console.log("[ResumeSync] No summary found");
     return "";
   }
@@ -505,7 +532,6 @@
       sec = getSectionByHeading(/^experience$/i) || getSectionByHeading(/experience/i);
     }
     console.log("[ResumeSync] Experience section found:", !!sec);
-    
     if (!sec) {
       // Last resort: scan entire document for experience-like sections
       const main = document.querySelector("main") || document.body;
@@ -519,60 +545,85 @@
         }
       }
     }
-    
     if (!sec) {
-      console.log("[ResumeSync] No experience section found");
+      // Log main HTML for debugging
+      console.log("[ResumeSync] No experience section found. Main HTML:", (document.querySelector("main") || document.body).innerHTML);
       return [];
     }
+    // Log section HTML for debugging
+    console.log("[ResumeSync] Experience section HTML:", sec.innerHTML);
 
-    const allP = (root) => q("p", root).map((p) => clean(p.textContent)).filter(Boolean);
-    const desc = (root) =>
-      clean((root.querySelector('span[data-testid="expandable-text-box"]')?.textContent || "")
-        .replace(/\s*…\s*more\b/gi, "")
-        .replace(/\s*…\s*$/g, ""));
-
-    const companyFromLogo = (root) =>
-      clean(root.querySelector('figure[aria-label$="logo"]')?.getAttribute("aria-label")?.replace(/\s*logo$/i, "") || "");
-
-    const companyFromDot = (texts) => clean((texts.find((t) => /·/.test(t)) || "").split("·")[0]);
-
-    const parseSingle = (entity) => {
-      const pAll = allP(entity);
-      const anchor = q('a[href*="/company/"], a[href*="/school/"]', entity)
-        .find((a) => a.querySelectorAll("p").length >= 2);
-
-      const ps = anchor ? allP(anchor) : pAll;
-
-      const title = ps[0] || "";
-      const duration = pickDuration(ps) || pickDuration(pAll) || null;
-      const where = companyFromLogo(entity) || companyFromDot(ps) || companyFromDot(pAll) || "";
-      const description = desc(entity);
-
-      return where || title || duration || description ? { where, duration, title, description } : null;
-    };
-
-    // Try component key first
-    let items = q('div[componentkey^="entity-collection-item-"]', sec)
-      .flatMap((entity) => [parseSingle(entity)])
-      .filter(Boolean);
-
-    console.log("[ResumeSync] Experience items found with componentkey selector:", items.length);
-
-    // If that didn't work, look for divs that contain job info
-    if (!items.length) {
-      console.log("[ResumeSync] Trying generic experience item selector");
-      items = q('div, li', sec)
-        .filter(el => {
-          const text = el.textContent;
-          // Look for elements that likely contain experience info
-          return /\d{4}|present|current|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i.test(text);
-        })
-        .map(parseSingle)
-        .filter(Boolean);
-      
-      console.log("[ResumeSync] Experience items found with generic selector:", items.length);
+    // New LinkedIn DOM: experience entries are in ul > li under the section
+    let items = [];
+    const ul = sec.querySelector("ul");
+    if (ul) {
+      const lis = ul.querySelectorAll("li");
+      for (let li of lis) {
+        // Find job container
+        const jobDiv = li.querySelector('[data-view-name="profile-component-entity"]') || li.querySelector("div");
+        if (!jobDiv) continue;
+        // Title
+        let title = "";
+        const titleDiv = jobDiv.querySelector(".mr1.hoverable-link-text.t-bold") || jobDiv.querySelector("strong") || jobDiv.querySelector("span.t-bold") || jobDiv.querySelector("span[aria-hidden='true']");
+        if (titleDiv) title = clean(titleDiv.textContent);
+        // Company
+        let company = "";
+        const companySpan = jobDiv.querySelector("span.t-14.t-normal") || jobDiv.querySelector("span.visually-hidden");
+        if (companySpan) company = clean(companySpan.textContent);
+        // Duration
+        let duration = "";
+        const durationSpan = jobDiv.querySelector("span.pvs-entity__caption-wrapper") || jobDiv.querySelector("span.t-14.t-normal.t-black--light");
+        if (durationSpan) duration = clean(durationSpan.textContent);
+        // Description
+        let description = "";
+        const descDiv = li.querySelector(".ovswzBtDiuwrvZGPImbKEolithPQlnqRyaOGtY") || li.querySelector(".inline-show-more-text--is-collapsed") || li.querySelector("span.visually-hidden");
+        if (descDiv) description = clean(descDiv.textContent);
+        // Only add if title or company
+        if (title || company || duration || description) {
+          items.push({ where: company, title, duration, description });
+        }
+      }
+      console.log("[ResumeSync] Experience items found with ul > li scan:", items.length);
     }
-
+    // Fallback: try previous generic selectors if nothing found
+    if (!items.length) {
+      // ...existing code...
+      const allP = (root) => q("p", root).map((p) => clean(p.textContent)).filter(Boolean);
+      const desc = (root) =>
+        clean((root.querySelector('span[data-testid="expandable-text-box"]')?.textContent || "")
+          .replace(/\s*…\s*more\b/gi, "")
+          .replace(/\s*…\s*$/g, ""));
+      const companyFromLogo = (root) =>
+        clean(root.querySelector('figure[aria-label$="logo"]')?.getAttribute("aria-label")?.replace(/\s*logo$/i, "") || "");
+      const companyFromDot = (texts) => clean((texts.find((t) => /·/.test(t)) || "").split("·")[0]);
+      const parseSingle = (entity) => {
+        const pAll = allP(entity);
+        const anchor = q('a[href*="/company/"], a[href*="/school/"]', entity)
+          .find((a) => a.querySelectorAll("p").length >= 2);
+        const ps = anchor ? allP(anchor) : pAll;
+        const title = ps[0] || "";
+        const duration = pickDuration(ps) || pickDuration(pAll) || null;
+        const where = companyFromLogo(entity) || companyFromDot(ps) || companyFromDot(pAll) || "";
+        const description = desc(entity);
+        return where || title || duration || description ? { where, duration, title, description } : null;
+      };
+      items = q('div[componentkey^="entity-collection-item-"]', sec)
+        .flatMap((entity) => [parseSingle(entity)])
+        .filter(Boolean);
+      console.log("[ResumeSync] Experience items found with componentkey selector:", items.length);
+      if (!items.length) {
+        console.log("[ResumeSync] Trying generic experience item selector");
+        items = q('div, li', sec)
+          .filter(el => {
+            const text = el.textContent;
+            // Look for elements that likely contain experience info
+            return /\d{4}|present|current|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i.test(text);
+          })
+          .map(parseSingle)
+          .filter(Boolean);
+        console.log("[ResumeSync] Experience items found with generic selector:", items.length);
+      }
+    }
     return dedupe(items, (r) => `${r.where}||${r.title}||${r.duration}||${r.description}`);
   }
 
