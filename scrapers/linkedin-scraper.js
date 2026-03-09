@@ -98,6 +98,50 @@
     getSectionByHeading(/^education$/i) ||
     getSectionByHeading(/education/i);
 
+  // ── Summary/About extraction ──────────────────────────────────────────────
+  function scrapeSummary() {
+    let summary = "";
+    
+    // Try specific selectors first
+    summary = document.querySelector('[data-view-name="about"] p')?.textContent?.trim() || "";
+    if (summary) {
+      console.log("[ResumeSync] Summary found via about data-view-name");
+      return clean(summary).substring(0, 1000);
+    }
+    
+    // Try to find summary section by heading
+    const aboutSection = getSectionByHeading(/^about$/i) || getSectionByHeading(/about|biography|bio/i);
+    if (aboutSection) {
+      const p = q("p", aboutSection)[0];
+      summary = p?.textContent?.trim() || "";
+      if (summary) {
+        console.log("[ResumeSync] Summary found via heading scan");
+        return clean(summary).substring(0, 1000);
+      }
+    }
+    
+    // Another specific selector approach
+    summary = document.querySelector('[data-view-name="profile-intro"] p')?.textContent?.trim() || "";
+    if (summary) {
+      console.log("[ResumeSync] Summary found via profile-intro");
+      return clean(summary).substring(0, 1000);
+    }
+    
+    // Try looking for text in the about section div
+    const aboutDiv = document.querySelector('[data-view-name="about"]');
+    if (aboutDiv) {
+      const allText = aboutDiv.textContent || "";
+      if (allText.length > 50) {
+        summary = allText.trim();
+        console.log("[ResumeSync] Summary found via about div text");
+        return clean(summary).substring(0, 1000);
+      }
+    }
+    
+    console.log("[ResumeSync] No summary found");
+    return "";
+  }
+
   const getSkillsSection = () =>
     document.querySelector("#skills")?.closest("section") ||
     getSectionByViewName("profile-card-skills") ||
@@ -188,9 +232,10 @@
         /\bto\b/i.test(s) ||
         /(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i.test(s));
 
-    return q('a[href*="/school/"]', container)
+    // Try school link selectors first
+    let results = q('a[href*="/school/"]', container)
       .map((a) => q("p", a).map((p) => clean(p.textContent)).filter(Boolean))
-      .filter((ps) => ps.length >= 2)
+      .filter((ps) => ps.length >= 1)
       .map((ps) => {
         const school = ps[0] || "";
         const year = ps.find(isYear) || null;
@@ -204,11 +249,44 @@
         seen.add(key);
         return true;
       });
+
+    console.log("[ResumeSync] Education found with school links:", results.length);
+
+    // If no results, scan for education entries by looking for year patterns
+    if (!results.length) {
+      console.log("[ResumeSync] Using generic education scanner");
+      q("div, li", container)
+        .forEach((el) => {
+          const text = el.textContent;
+          // Look for education-like entries (has school name and year)
+          if (/\b(19|20)\d{2}\b/.test(text) && text.length > 10 && text.length < 500) {
+            const ps = q("p, span", el).map((p) => clean(p.textContent)).filter(Boolean);
+            if (ps.length >= 1) {
+              const school = ps[0] || "";
+              const year = ps.find(isYear) || null;
+              const yearIndex = year ? ps.indexOf(year) : ps.length;
+              const degree = ps.slice(1, yearIndex).filter(t => !isYear(t))[0] || "";
+              
+              const key = `${school}||${degree}||${year || ""}`.toLowerCase();
+              if (school && !seen.has(key)) {
+                seen.add(key);
+                results.push({ school, degree, year });
+              }
+            }
+          }
+        });
+      console.log("[ResumeSync] Education found with generic scanner:", results.length);
+    }
+
+    return results;
   }
 
   function getEducationHome() {
     const sec = getEducationSection();
-    return sec ? scrapeEducationFromRoot(sec) : [];
+    console.log("[ResumeSync] Education section found:", !!sec);
+    const result = sec ? scrapeEducationFromRoot(sec) : [];
+    console.log("[ResumeSync] Education items found:", result);
+    return result;
   }
 
   function scrapeEducationDetails() {
@@ -283,24 +361,94 @@
   async function scrapeSkills() {
     const seen = new Set();
 
+    // Scroll to load skills
     for (let i = 0; i < 8; i++) {
       window.scrollTo(0, document.body.scrollHeight);
       await sleep(120);
     }
 
-    return q('[componentkey*="com.linkedin.sdui.profile.skill("]')
-      .map((card) => {
-        const top = card.querySelector("p") || card.querySelector("span");
-        return top ? clean(top.textContent) : "";
-      })
-      .filter(Boolean)
-      .filter((skill) => {
-        const k = skill.toLowerCase();
-        if (seen.has(k)) return false;
+    // Try to find skills section by various selectors
+    let skillsSection = getSkillsSection();
+    if (!skillsSection) {
+      const main = document.querySelector("main") || document.body;
+      const allSections = main.querySelectorAll("section, [role='region']");
+      for (let s of allSections) {
+        const heading = s.querySelector("h2, h3, h4");
+        if (heading && /^skills$/i.test(heading.textContent)) {
+          skillsSection = s;
+          console.log("[ResumeSync] Found skills section by text match");
+          break;
+        }
+      }
+    }
+
+    let skills = [];
+
+    // Try componentkey selector
+    if (skillsSection) {
+      skills = q('[componentkey*="com.linkedin.sdui.profile.skill("]', skillsSection)
+        .map((card) => {
+          const top = card.querySelector("p") || card.querySelector("span");
+          return top ? clean(top.textContent) : "";
+        })
+        .filter(Boolean);
+
+      console.log("[ResumeSync] Skills found with componentkey:", skills.length);
+    }
+
+    // Fallback: Look for skill elements in the section 
+    if (!skills.length && skillsSection) {
+      console.log("[ResumeSync] Using skills section text extraction");
+      skills = q("button, a, span, div", skillsSection)
+        .map((el) => {
+          const text = clean(el.textContent);
+          // Filter: skills are short text without action words
+          if (text && text.length > 1 && text.length < 50 && 
+              !/endorse|remove|edit|add|show|more|button|skill/i.test(text)) {
+            return text;
+          }
+          return "";
+        })
+        .filter(Boolean)
+        .filter((skill, idx, arr) => arr.indexOf(skill) === idx); // unique only
+
+      console.log("[ResumeSync] Skills found with text extraction:", skills.length);
+    }
+
+    // Last resort: scan entire page for skill-like text
+    if (!skills.length) {
+      console.log("[ResumeSync] Using full page skill scan");
+      const main = document.querySelector("main") || document.body;
+      // Look for any elements in a skills-related section
+      const allElements = main.querySelectorAll("button, a, span");
+      skills = Array.from(allElements)
+        .map((el) => {
+          const text = clean(el.textContent);
+          // Very generic: just get short text
+          if (text && text.length > 2 && text.length < 40 && !/button|show|more|endorse/i.test(text)) {
+            return text;
+          }
+          return "";
+        })
+        .filter(Boolean)
+        .filter((skill, idx, arr) => arr.indexOf(skill) === idx)
+        .slice(0, 50); // limit to prevent noise
+
+      console.log("[ResumeSync] Skills found with full page scan:", skills.length);
+    }
+
+    // Deduplicate by lowercasing
+    const result = [];
+    for (const skill of skills) {
+      const k = skill.toLowerCase();
+      if (!seen.has(k)) {
         seen.add(k);
-        return true;
-      })
-      .map((skill) => ({ skill }));
+        result.push({ skill });
+      }
+    }
+
+    console.log("[ResumeSync] Final skills count:", result.length);
+    return result;
   }
 
   // Projects and Experience 
@@ -350,8 +498,32 @@
   }
 
   function scrapeExperience() {
-    const sec = getSectionByViewName("profile-card-experience");
-    if (!sec) return [];
+    // First try the specific section selector
+    let sec = getSectionByViewName("profile-card-experience");
+    if (!sec) {
+      // Fallback: find by heading
+      sec = getSectionByHeading(/^experience$/i) || getSectionByHeading(/experience/i);
+    }
+    console.log("[ResumeSync] Experience section found:", !!sec);
+    
+    if (!sec) {
+      // Last resort: scan entire document for experience-like sections
+      const main = document.querySelector("main") || document.body;
+      const allSections = main.querySelectorAll("section, [role='region']");
+      for (let s of allSections) {
+        const heading = s.querySelector("h2, h3, h4");
+        if (heading && /experience|work|employment|job/i.test(heading.textContent)) {
+          sec = s;
+          console.log("[ResumeSync] Found experience section by text scan");
+          break;
+        }
+      }
+    }
+    
+    if (!sec) {
+      console.log("[ResumeSync] No experience section found");
+      return [];
+    }
 
     const allP = (root) => q("p", root).map((p) => clean(p.textContent)).filter(Boolean);
     const desc = (root) =>
@@ -379,22 +551,27 @@
       return where || title || duration || description ? { where, duration, title, description } : null;
     };
 
-    const parseMulti = (entity) => {
-      const where = companyFromLogo(entity) || "";
-      return q("ul li", entity)
-        .map((li) => {
-          const ps = allP(li);
-          const title = ps[0] || "";
-          const duration = pickDuration(ps) || null;
-          const description = desc(li);
-          return where || title || duration || description ? { where, duration, title, description } : null;
-        })
-        .filter(Boolean);
-    };
-
-    const items = q('div[componentkey^="entity-collection-item-"]', sec)
-      .flatMap((entity) => (entity.querySelector("ul li") ? parseMulti(entity) : [parseSingle(entity)]))
+    // Try component key first
+    let items = q('div[componentkey^="entity-collection-item-"]', sec)
+      .flatMap((entity) => [parseSingle(entity)])
       .filter(Boolean);
+
+    console.log("[ResumeSync] Experience items found with componentkey selector:", items.length);
+
+    // If that didn't work, look for divs that contain job info
+    if (!items.length) {
+      console.log("[ResumeSync] Trying generic experience item selector");
+      items = q('div, li', sec)
+        .filter(el => {
+          const text = el.textContent;
+          // Look for elements that likely contain experience info
+          return /\d{4}|present|current|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i.test(text);
+        })
+        .map(parseSingle)
+        .filter(Boolean);
+      
+      console.log("[ResumeSync] Experience items found with generic selector:", items.length);
+    }
 
     return dedupe(items, (r) => `${r.where}||${r.title}||${r.duration}||${r.description}`);
   }
@@ -403,6 +580,7 @@
   async function scrapeHomeSnapshot(skip = {}) {
     return {
       fullName: getFullName(),
+      summary: scrapeSummary(),
       projects: scrapeProjects(),
       experience: scrapeExperience(),
       certifications: skip.certifications ? [] : getCertificationsHome(),
@@ -510,7 +688,43 @@
   handleFlowOnLoad();
 
   // ── Popup command  ───────────────────────────────────────────────
+  // ── Normalize experience format ────────────────────────────────────────────
+  function normalizeExperience(expArray) {
+    return (expArray || []).map(exp => ({
+      title: exp.title || "",
+      company: exp.where || exp.company || "",  // LinkedIn uses 'where', Handshake uses 'company'
+      duration: exp.duration || "",
+      description: exp.description || ""
+    }));
+  }
+
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    // Quick extraction for Compare button
+    if (request.action === "extractProfile") {
+      (async () => {
+        try {
+          const homeSnapshot = await scrapeHomeSnapshot();
+          
+          const profileData = {
+            name: homeSnapshot.fullName || "",
+            title: "", // LinkedIn profile doesn't have headline on home
+            summary: homeSnapshot.summary || "",
+            experience: normalizeExperience(homeSnapshot.experience),
+            education: homeSnapshot.education || [],
+            skills: (homeSnapshot.skills || []).map((s) => (typeof s === "string" ? s : s.skill)).filter(Boolean),
+          };
+          
+          console.log("[ResumeSync] LinkedIn extracted:", profileData);
+          sendResponse({ success: true, profileData });
+        } catch (error) {
+          console.error("[ResumeSync] LinkedIn extraction error:", error);
+          sendResponse({ success: false, error: error.message });
+        }
+      })();
+      return true; 
+    }
+
+    // Deep scan flow
     if (request.cmd !== "START_CERTS_SKILLS_FLOW") return;
 
     (async () => {

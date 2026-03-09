@@ -100,6 +100,20 @@ export async function smartCompare(resume, profileData, onProgress) {
     skills:     flattenSkills(resume.skills || []),
   };
 
+  // Debug logging
+  console.log("=== SEMANTIC COMPARISON DEBUG ===");
+  console.log("Raw profile data:", profileData);
+  console.log("Raw resume data:", resume);
+  console.log("Flattened profile (experience array before flatten):", profileData.experience);
+  console.log("Flattened profile (education array before flatten):", profileData.education);
+  console.log("Flattened profile (skills array before flatten):", profileData.skills);
+  console.log("Flattened resume (experience array before flatten):", resume.experience);
+  console.log("Flattened resume (education array before flatten):", resume.education);
+  console.log("Flattened resume (skills array before flatten):", resume.skills);
+  console.log("Profile (after flattening):", profile);
+  console.log("Resume (after flattening):", res);
+  console.log("================================\n");
+
   const pairs = [
     { key: "summary",    label: "Summary / About",  rText: res.summary,    pText: profile.summary    },
     { key: "skills",     label: "Skills",            rText: res.skills,     pText: profile.skills     },
@@ -109,7 +123,11 @@ export async function smartCompare(resume, profileData, onProgress) {
 
   const results = [];
   for (const pair of pairs) {
-    if (!pair.rText.trim() || !pair.pText.trim()) {
+    const rEmpty = !pair.rText.trim();
+    const pEmpty = !pair.pText.trim();
+    console.log(`Comparing ${pair.key}: resume="${pair.rText.substring(0, 50)}${pair.rText.length > 50 ? '...' : ''}" profile="${pair.pText.substring(0, 50)}${pair.pText.length > 50 ? '...' : ''}" (resume empty: ${rEmpty}, profile empty: ${pEmpty})`);
+    
+    if (rEmpty || pEmpty) {
       results.push({ ...pair, score: null, reason: "Missing on one or both sides" });
       continue;
     }

@@ -109,52 +109,25 @@
     <!-- ── Compare Tab ────────────────────────────────────────────── -->
     <div id="compare-tab" class="tab-content">
       <div class="section">
-        <h2>Profile Comparison</h2>
+        <h2>Compare Resume</h2>
 
-        <!-- Quick Scan -->
         <div class="scan-block">
           <p class="help-text">
-            <strong>Quick Scan</strong> — reads the current LinkedIn or Handshake
-            page without navigating away.
+            Navigate to your Handshake or LinkedIn profile, then click below to extract and compare
+            with your saved resume using locally-hosted, organic, AI-powered semantic analysis.
           </p>
-          <button id="scanProfile" class="btn btn-primary">🔍 Quick Scan Profile</button>
-        </div>
-
-        <!-- Deep Scan (LinkedIn only) -->
-        <div class="scan-block">
-          <p class="help-text">
-            <strong>Deep Scan LinkedIn</strong> — navigates through Certifications
-            and Skills sub-pages to collect the full dataset. The tab will briefly
-            redirect; return here when it finishes.
-          </p>
-          <div class="button-group">
-            <button id="deepScanLinkedIn" class="btn btn-accent">🔎 Deep Scan LinkedIn</button>
-            <button id="loadDeepResult"   class="btn btn-secondary">📥 Load Last Deep Result</button>
-          </div>
-          <div id="deepScanStatus" class="status-message"></div>
-        </div>
-
-        <!-- Smart Compare (on-device MiniLM) -->
-        <div class="scan-block">
-          <p class="help-text">
-            <strong>Smart Compare</strong> &#x2014; uses a fully bundled on-device AI
-            model (all-MiniLM-L6-v2) to score semantic alignment between your resume
-            and the last scanned profile. Runs entirely locally &#x2014; no internet
-            required. Run a Quick Scan or Deep Scan first, then click below.
-          </p>
-          <button id="smartCompareBtn" class="btn btn-neural">&#x1F9E0; Smart Compare</button>
+          <button id="compareBtn" class="btn btn-neural">⚡ Compare Resume</button>
           <div id="modelProgress" class="model-progress" style="display:none">
             <div class="model-progress-bar">
               <div id="modelProgressFill" class="model-progress-fill"></div>
             </div>
             <span id="modelProgressLabel" class="model-progress-label">Loading&#x2026;</span>
           </div>
-          <div id="smartCompareStatus" class="status-message"></div>
-          <div id="smartCompareResults" class="smart-results"></div>
+          <div id="compareStatus" class="status-message"></div>
         </div>
 
-        <div id="compareStatus" class="status-message"></div>
         <div id="comparisonResults" class="comparison-results"></div>
+        <div id="smartCompareResults" class="smart-results"></div>
       </div>
     </div>
   </div>

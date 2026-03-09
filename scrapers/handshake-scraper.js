@@ -4,8 +4,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "extractProfile") {
     try {
       const profileData = extractHandshakeProfile();
+      console.log("[ResumeSync] Handshake extracted:", profileData);
       sendResponse({ success: true, profileData });
     } catch (error) {
+      console.error("[ResumeSync] Handshake extraction error:", error);
       sendResponse({ success: false, error: error.message });
     }
   }
@@ -18,111 +20,187 @@ function extractHandshakeProfile() {
     experience: [], education: [], skills: []
   };
 
-  // Name
-  const nameEl =
-    document.querySelector('[data-hook="profile-name"]') ||
-    document.querySelector("h1.profile-name") ||
-    document.querySelector(".student-name") ||
-    document.querySelector("h1");
-  if (nameEl) profileData.name = nameEl.textContent.trim();
+  const main = document.querySelector("main") || document.body;
+  const allElements = main.querySelectorAll("*");
 
-  // Title / headline
-  const titleEl =
-    document.querySelector('[data-hook="profile-headline"]') ||
-    document.querySelector(".profile-headline") ||
-    document.querySelector(".student-headline");
-  if (titleEl) profileData.title = titleEl.textContent.trim();
+  // === NAME ===
+  profileData.name = (
+    document.querySelector('[data-hook="profile-name"]')?.textContent.trim() ||
+    main.querySelector("h1")?.textContent.trim() ||
+    ""
+  ).trim();
+  console.log("[ResumeSync] Handshake name:", profileData.name);
 
-  // Summary / about
-  const summaryEl =
-    document.querySelector('[data-hook="profile-summary"]') ||
-    document.querySelector(".profile-summary") ||
+  // === TITLE ===
+  profileData.title = (
+    document.querySelector('[data-hook="profile-headline"]')?.textContent.trim() ||
+    main.querySelector("h2")?.textContent.trim() ||
+    ""
+  ).trim();
+  console.log("[ResumeSync] Handshake title:", profileData.title);
+
+  // === SUMMARY - Generic scanner ===
+  console.log("[ResumeSync] Scanning for summary section...");
+  let summaryFound = false;
+  
+  // First try specific selectors as fallback
+  let aboutEl = document.querySelector('[data-hook="profile-summary"]') ||
     document.querySelector(".about-me-text") ||
     document.querySelector('[data-test="about-me"]');
-  if (summaryEl) profileData.summary = summaryEl.textContent.trim();
-
-  // Experience
-  const expSection =
-    document.querySelector('[data-hook="experiences-section"]') ||
-    document.querySelector(".experiences-section") ||
-    document.querySelector('[data-test="experiences"]');
-
-  if (expSection) {
-    const items =
-      expSection.querySelectorAll('[data-hook="experience-card"]') ||
-      expSection.querySelectorAll(".experience-card") ||
-      expSection.querySelectorAll('[data-test="experience-item"]');
-
-    items.forEach((item) => {
-      const titleEl2  = item.querySelector('[data-hook="experience-title"]')    || item.querySelector("h3");
-      const companyEl = item.querySelector('[data-hook="experience-company"]')  || item.querySelector(".company-name");
-      const durEl     = item.querySelector('[data-hook="experience-duration"]') || item.querySelector(".date-range");
-      const descEl    = item.querySelector('[data-hook="experience-description"]');
-      if (titleEl2) {
-        profileData.experience.push({
-          title:       titleEl2.textContent.trim(),
-          company:     companyEl?.textContent.trim() || "",
-          duration:    durEl?.textContent.trim()     || "",
-          description: descEl?.textContent.trim()    || ""
-        });
+  
+  if (aboutEl) {
+    profileData.summary = aboutEl.textContent.trim();
+    summaryFound = true;
+    console.log("[ResumeSync] Summary found via data selector");
+  }
+  
+  // If not found, scan for "About" or "Summary" heading
+  if (!summaryFound) {
+    for (let el of allElements) {
+      const heading = el.querySelector("h2, h3, h4, h5");
+      if (heading && /^about|^summary|biography|bio/i.test(heading.textContent.trim())) {
+        const text = el.textContent.trim();
+        // Get only the content after the heading, not the entire section
+        const headingText = heading.textContent.trim();
+        let summaryText = text.replace(headingText, "").trim();
+        
+        // Clean up and get reasonable length (not too short, not entire page)
+        if (summaryText.length > 20 && summaryText.length < 2000) {
+          profileData.summary = summaryText;
+          summaryFound = true;
+          console.log("[ResumeSync] Summary found via heading scan");
+          break;
+        }
       }
-    });
+    }
   }
-
-  // Education
-  const eduSection =
-    document.querySelector('[data-hook="educations-section"]') ||
-    document.querySelector(".educations-section") ||
-    document.querySelector('[data-test="education"]');
-
-  if (eduSection) {
-    const items =
-      eduSection.querySelectorAll('[data-hook="education-card"]') ||
-      eduSection.querySelectorAll(".education-card") ||
-      eduSection.querySelectorAll('[data-test="education-item"]');
-
-    items.forEach((item) => {
-      const schoolEl = item.querySelector('[data-hook="education-school"]') || item.querySelector("h3");
-      const degreeEl = item.querySelector('[data-hook="education-degree"]');
-      const yearEl   = item.querySelector('[data-hook="education-dates"]')  || item.querySelector(".date-range");
-      if (schoolEl) {
-        profileData.education.push({
-          school: schoolEl.textContent.trim(),
-          degree: degreeEl?.textContent.trim() || "",
-          year:   yearEl?.textContent.trim()   || ""
-        });
+  
+  // Final fallback: look for paragraph immediately after name/title
+  if (!summaryFound && profileData.title) {
+    for (let el of allElements) {
+      const text = el.textContent.trim();
+      if (text.includes(profileData.title) && text.length < 1000 && text.length > 50) {
+        profileData.summary = text.replace(profileData.title, "").replace(profileData.name, "").trim();
+        if (profileData.summary.length > 20) {
+          summaryFound = true;
+          console.log("[ResumeSync] Summary found via context scan");
+          break;
+        }
       }
-    });
+    }
   }
+  
+  console.log("[ResumeSync] Handshake summary:", profileData.summary.substring(0, 50) + "...");
 
-  // Skills
-  const skillsSection =
-    document.querySelector('[data-hook="skills-section"]') ||
-    document.querySelector(".skills-section") ||
-    document.querySelector('[data-test="skills"]');
-
-  if (skillsSection) {
-    const items =
-      skillsSection.querySelectorAll('[data-hook="skill-tag"]') ||
-      skillsSection.querySelectorAll(".skill-tag") ||
-      skillsSection.querySelectorAll(".skill-item");
-
-    items.forEach((item) => {
-      const name = item.textContent.trim();
-      if (name) profileData.skills.push(name);
-    });
+  // === EXPERIENCE - Generic scanner ===
+  console.log("[ResumeSync] Scanning for experience section...");
+  for (let el of allElements) {
+    const text = el.textContent;
+    // Look for section headings
+    const heading = el.querySelector("h2, h3, h4, h5");
+    if (heading && /experience|work|employment|job|position/i.test(heading.textContent) && text.length < 5000) {
+      console.log("[ResumeSync] Found experience-like section");
+      // Scan children for job entries
+      const children = el.querySelectorAll("div, li, article, section");
+      for (let child of children) {
+        const childText = child.textContent;
+        if (childText.length > 30 && childText.length < 1000) {
+          // extract job info
+          const lines = childText.split("\n").map(l => l.trim()).filter(l => l);
+          if (lines.length >= 1) {
+            profileData.experience.push({
+              title: lines[0] || "",
+              company: lines[1] || "",
+              duration: lines[2] || "",
+              description: lines.slice(3).join(" ").substring(0, 500)
+            });
+          }
+        }
+      }
+      if (profileData.experience.length > 0) break;
+    }
   }
+  console.log("[ResumeSync] Experience items found:", profileData.experience.length);
 
-  // Fallback skills
-  if (profileData.skills.length === 0) {
-    document.querySelectorAll(".skills li, [class*='skill'] span").forEach((item) => {
-      const name = item.textContent.trim();
-      if (name && name.length < 50) profileData.skills.push(name);
-    });
+  // === EDUCATION - Generic scanner ===
+  console.log("[ResumeSync] Scanning for education section...");
+  for (let el of allElements) {
+    const heading = el.querySelector("h2, h3, h4, h5");
+    if (heading && /education|school|university|college|degree/i.test(heading.textContent) && el.textContent.length < 5000) {
+      console.log("[ResumeSync] Found education-like section");
+      // Get all text from section and split into lines
+      const sectionText = el.textContent;
+      const allLines = sectionText.split("\n").map(l => l.trim()).filter(l => l);
+      
+      // Group lines into education entries
+      // An education entry typically contains: school name, degree, year, gpa, etc.
+      // We'll group lines that seem to belong together
+      let currentEntry = { school: "", degree: "", year: "" };
+      let entriesFound = [];
+      
+      for (let line of allLines) {
+        // Skip the section heading
+        if (/^education|^school|^university|^college/i.test(line)) continue;
+        
+        // Check if this line looks like a year (for grouping entries)
+        const yearMatch = line.match(/\d{4}|present|current|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i);
+        
+        // If we have a year and previous entry has content, start new entry
+        if (yearMatch && (currentEntry.school || currentEntry.degree)) {
+          if (currentEntry.school || currentEntry.degree || currentEntry.year) {
+            entriesFound.push({...currentEntry});
+          }
+          currentEntry = { school: "", degree: "", year: "" };
+        }
+        
+        // Try to categorize the line
+        if (/bachelor|master|associate|phd|degree|b\.?a|b\.?s|m\.?a|m\.?s/i.test(line)) {
+          currentEntry.degree = line;
+        } else if (/\d{4}|present|current|january|february|march|april|may|june|july|august|september|october|november|december/i.test(line)) {
+          currentEntry.year = line;
+        } else if (!currentEntry.school && (line.length > 10 || /university|college|school|institute/i.test(line))) {
+          currentEntry.school = line;
+        }
+      }
+      
+      // Add last entry if it has content
+      if (currentEntry.school || currentEntry.degree || currentEntry.year) {
+        entriesFound.push(currentEntry);
+      }
+      
+      profileData.education = entriesFound;
+      if (profileData.education.length > 0) {
+        console.log("[ResumeSync] Education items found with line grouping:", profileData.education.length);
+        break;
+      }
+    }
   }
+  console.log("[ResumeSync] Education items found:", profileData.education.length);
 
-  profileData.skills = [...new Set(profileData.skills.filter((s) => s.length > 0))];
+  // === SKILLS - Generic scanner ===
+  console.log("[ResumeSync] Scanning for skills section...");
+  for (let el of allElements) {
+    const heading = el.querySelector("h2, h3, h4, h5");
+    if (heading && /^skills?$/i.test(heading.textContent) && el.textContent.length < 3000) {
+      console.log("[ResumeSync] Found skills section");
+      // Get all text nodes and skill-like elements
+      const skillTexts = new Set();
+      const items = el.querySelectorAll("span, button, div, a, li, p");
+      for (let item of items) {
+        const text = item.textContent.trim();
+        // Skills are typically short, non-action words
+        if (text && text.length > 1 && text.length < 40 &&
+            !/button|edit|add|remove|show|endorse|view/i.test(text)) {
+          skillTexts.add(text);
+        }
+      }
+      profileData.skills = Array.from(skillTexts);
+      if (profileData.skills.length > 0) break;
+    }
+  }
+  console.log("[ResumeSync] Skills items found:", profileData.skills.length);
 
+  console.log("[ResumeSync] Final Handshake profile data:", profileData);
   return profileData;
 }
 

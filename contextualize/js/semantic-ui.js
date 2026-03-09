@@ -5,11 +5,11 @@
 import { smartCompare, scoreLabel } from "./semantic.js";
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
-const btn          = document.getElementById("smartCompareBtn");
+const btn          = document.getElementById("compareBtn");
 const progressWrap = document.getElementById("modelProgress");
 const progressFill = document.getElementById("modelProgressFill");
 const progressLbl  = document.getElementById("modelProgressLabel");
-const statusEl     = document.getElementById("smartCompareStatus");
+const statusEl     = document.getElementById("compareStatus");
 const resultsEl    = document.getElementById("smartCompareResults");
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -78,32 +78,66 @@ btn.addEventListener("click", async () => {
   btn.disabled               = true;
 
   try {
+    // Check if resume is saved
     const { currentResume } = await chrome.storage.local.get("currentResume");
     if (!currentResume) {
       showStatus("error", "No resume saved. Go to the Resume tab and save your resume first.");
       return;
     }
 
-    const { rs_lastResult, rs_quickResult } = await chrome.storage.local.get(["rs_lastResult", "rs_quickResult"]);
-    const profileData = rs_lastResult || rs_quickResult;
-
-    if (!profileData) {
-      showStatus("error", "No scan result found. Run a Quick Scan or Deep Scan on a profile first.");
+    // Get active tab and extract profile
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.url) {
+      showStatus("error", "Cannot access this page");
       return;
     }
+
+    const isLinkedIn  = tab.url.includes("linkedin.com");
+    const isHandshake = tab.url.includes("joinhandshake.com");
+    
+    if (!isLinkedIn && !isHandshake) {
+      showStatus("info", "Navigate to a LinkedIn or Handshake profile first");
+      return;
+    }
+
+    showStatus("info", "Extracting profile...");
+
+    // Extract profile using appropriate scraper
+    const response = await chrome.tabs.sendMessage(tab.id, { action: "extractProfile" });
+
+    if (!response?.success) {
+      showStatus("error", "Could not extract profile. Make sure you're on a profile page.");
+      return;
+    }
+
+    const profileData = response.profileData;
+    
+    // Debug: Log extracted data
+    console.log("Extracted profileData:", profileData);
+    console.log("Resume data:", currentResume);
+    console.log("Profile summary length:", profileData.summary?.length || 0);
+    console.log("Profile experience:", profileData.experience);
+    console.log("Profile education:", profileData.education);
+    console.log("Profile skills:", profileData.skills);
+
+    // Show progress and run smart compare
+    showStatus("info", "Running semantic comparison with AI model...");
 
     const result = await smartCompare(currentResume, profileData, (pct, msg) => {
       showProgress(pct, msg);
     });
+    
+    // Debug: Log comparison results
+    console.log("Comparison result:", result);
 
     hideProgress();
     renderResults(result);
-    showStatus("success", "✓ Smart comparison complete!");
+    showStatus("success", "✓ Comparison complete!");
 
   } catch (err) {
     hideProgress();
     showStatus("error", `Error: ${err.message}`);
-    console.error("SmartCompare error:", err);
+    console.error("Compare error:", err);
   } finally {
     btn.disabled = false;
   }
