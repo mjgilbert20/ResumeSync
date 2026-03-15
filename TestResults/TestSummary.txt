@@ -1,0 +1,55 @@
+ResumeSync — Test Summary
+==========================
+Date: 03-15-2026
+
+1. Automated End-to-End Testing (Playwright)
+---------------------------------------------
+Tool: Playwright with Chromium (headed mode, extension loaded as unpacked)
+Most recent test run: 03-15-2026
+Result: 25/25 tests PASSED (24.2s total runtime)
+
+Categories tested:
+  - Popup basics (4 tests): title, tabs, default state, form field presence
+  - UI responsiveness (4 tests): tab switching, add education/experience, card delete — all under 200ms
+  - Save & Load (4 tests): correct data written to chrome.storage, validation, field population, empty state
+  - Storage limits (2 tests): version history capped at 20, 20 resumes fit under 5MB
+  - Version history (4 tests): version creation on save, empty state, restore populates form, multiple saves
+  - Import/Export JSON (2 tests): JSON import populates fields, export handles missing data
+  - Resume Preview (1 test): preview renders correctly after save
+  - Education/Experience cards (4 tests): add multiple, delete, empty cards filtered on save
+
+2. Performance Testing
+-----------------------
+Tool: Playwright in-browser performance.now() measurements
+Most recent test run: 03-15-2026
+Result: ALL PASSED
+
+  - UI interactions (button clicks, tab switches) measured at <1ms in-browser (well under 200ms target)
+  - Storage size for 20 full resume versions measured at well under 5MB limit
+  - Version history cap enforced at 20 entries maximum
+
+3. Manual Testing
+------------------
+Most recent session: 03-15-2026
+
+Areas validated manually:
+  - Import button opens system file picker dialog for .json files
+  - Resume fields populate correctly after JSON import (user reviews before saving)
+  - Save button writes to chrome.storage.local and creates a version snapshot
+  - Version history displays saved versions with date, notes, and summary
+  - Restore button loads a previous version into the form and switches to Resume tab
+  - Delete button removes a version (with confirmation dialog)
+  - Preview tab renders formatted resume immediately after save
+  - Export button downloads a .json file with the correct filename
+  - Tab switching between Resume, Preview, Versions, and Compare tabs
+  - Education and experience card add/remove functionality
+  - Compare tab UI elements render correctly (Compare Resume button present)
+
+4. User Testing
+----------------
+Most recent session: 03-15-2026
+
+  - Verified end-to-end workflow: fill form -> save -> check version history -> restore old version -> re-save
+  - Confirmed JSON import/export round-trip: export resume, re-import the file, fields match
+  - Validated that empty/incomplete cards are not saved to storage
+  - Confirmed validation error shows when saving without name or email

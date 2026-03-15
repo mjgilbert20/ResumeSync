@@ -1,0 +1,33 @@
+ResumeSync — User Testing Notes
+=================================
+Date: 2026-03-15
+
+SCENARIO 1: First-time user workflow
+--------------------------------------
+Steps: Open extension -> Fill in name, email, summary, skills -> Add education -> Add experience -> Save
+Result: PASS — All data saved correctly, version created, preview updated immediately
+
+SCENARIO 2: JSON import/export round-trip
+-------------------------------------------
+Steps: Save a resume -> Export as .json -> Clear storage -> Import the exported .json -> Compare fields
+Result: PASS — All fields match after round-trip. User must click Save after import (by design).
+
+SCENARIO 3: Version management
+--------------------------------
+Steps: Save 3 different resumes -> Go to Versions tab -> Restore oldest version -> Verify form
+Result: PASS — Oldest version restored correctly, form fields updated, switched to Resume tab automatically
+
+SCENARIO 4: Editing and re-saving
+------------------------------------
+Steps: Load existing resume -> Modify skills field -> Save -> Check version history
+Result: PASS — New version created with updated data, old version still accessible
+
+SCENARIO 5: Storage limits
+----------------------------
+Steps: Save 21 resumes sequentially -> Check version count
+Result: PASS — Version history capped at 20, oldest version dropped automatically
+
+SCENARIO 6: Empty/invalid input handling
+-------------------------------------------
+Steps: Try to save with no name or email -> Try to export with no saved resume
+Result: PASS — Clear error messages shown in both cases, no crashes

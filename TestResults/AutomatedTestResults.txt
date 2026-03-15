@@ -1,0 +1,36 @@
+ResumeSync — Automated Test Results (Playwright)
+===================================================
+Date: 2026-03-15
+
+Command: npx playwright test
+Environment: Windows 11, Chromium (headed), extension loaded unpacked
+
+Running 25 tests using 1 worker
+
+  ✓   1 tests/01-basics.spec.js:10:3 › Popup basics › popup loads with correct title (1.4s)
+  ✓   2 tests/01-basics.spec.js:16:3 › Popup basics › all four tabs are visible (471ms)
+  ✓   3 tests/01-basics.spec.js:27:3 › Popup basics › resume tab is active by default (2.6s)
+  ✓   4 tests/01-basics.spec.js:34:3 › Popup basics › all form fields are present in the Resume tab (1.1s)
+  ✓   5 tests/01-basics.spec.js:50:3 › UI responsiveness (<200ms) › tab switching responds within 200ms (200ms)
+  ✓   6 tests/01-basics.spec.js:64:3 › UI responsiveness (<200ms) › Add Education button responds within 200ms (179ms)
+  ✓   7 tests/01-basics.spec.js:76:3 › UI responsiveness (<200ms) › Add Experience button responds within 200ms (159ms)
+  ✓   8 tests/01-basics.spec.js:88:3 › UI responsiveness (<200ms) › card delete button responds within 200ms (237ms)
+  ✓   9 tests/02-save-load.spec.js:10:3 › Save and Load resume › saving writes correct data to chrome.storage (782ms)
+  ✓  10 tests/02-save-load.spec.js:52:3 › Save and Load resume › save requires name and email (validation) (330ms)
+  ✓  11 tests/02-save-load.spec.js:64:3 › Save and Load resume › loading populates all form fields correctly (296ms)
+  ✓  12 tests/02-save-load.spec.js:90:3 › Save and Load resume › load shows message when no resume is saved (406ms)
+  ✓  13 tests/02-save-load.spec.js:100:3 › Storage: version cap and size › version history is capped at 20 entries (329ms)
+  ✓  14 tests/02-save-load.spec.js:125:3 › Storage: version cap and size › 20 resumes fit well under 5MB in chrome.storage.local (284ms)
+  ✓  15 tests/03-versions.spec.js:10:3 › Version History › saving a resume creates a version entry (1.1s)
+  ✓  16 tests/03-versions.spec.js:31:3 › Version History › empty version history shows placeholder (256ms)
+  ✓  17 tests/03-versions.spec.js:39:3 › Version History › restoring a version populates the form and switches to Resume tab (336ms)
+  ✓  18 tests/03-versions.spec.js:62:3 › Version History › multiple saves create multiple version entries (932ms)
+  ✓  19 tests/04-import-export-preview-cards.spec.js:10:3 › Import and Export JSON › importing a .json file populates form fields (325ms)
+  ✓  20 tests/04-import-export-preview-cards.spec.js:34:3 › Import and Export JSON › export fails gracefully when no resume is saved (445ms)
+  ✓  21 tests/04-import-export-preview-cards.spec.js:44:3 › Resume Preview › preview updates with resume data after save (353ms)
+  ✓  22 tests/04-import-export-preview-cards.spec.js:67:3 › Education and Experience cards › can add multiple education cards (321ms)
+  ✓  23 tests/04-import-export-preview-cards.spec.js:76:3 › Education and Experience cards › can add multiple experience cards (271ms)
+  ✓  24 tests/04-import-export-preview-cards.spec.js:84:3 › Education and Experience cards › deleting a card removes it from the DOM (500ms)
+  ✓  25 tests/04-import-export-preview-cards.spec.js:94:3 › Education and Experience cards › empty cards are filtered out on save (492ms)
+
+  25 passed (24.2s)

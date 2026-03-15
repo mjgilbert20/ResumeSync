@@ -1,0 +1,32 @@
+ResumeSync — Known Issues
+==========================
+
+
+1. PDF Upload Not Implemented
+   - pdf-extract.js is loaded in popup.html but never called by popup.js
+   - The import button only accepts .json files; .pdf and .txt branches are not implemented
+   - The error message still references ".json, .txt, or .pdf" as supported formats
+
+2. LinkedIn Quick Scan Broken
+   - popup.js sends { action: "extractProfile" } to content scripts
+   - The LinkedIn scraper only handles { cmd: "START_CERTS_SKILLS_FLOW" }, not "extractProfile"
+   - Quick Scan works on Handshake but silently fails on LinkedIn
+
+3. Duplicate rs_quickResult Write
+   - In the scanProfile handler (popup.js), chrome.storage.local.set({ rs_quickResult }) is called twice in succession (identical calls)
+   - Harmless but indicates copy-paste error
+
+4. parseJSON Declared Twice
+   - parseJSON is defined at line ~579 and again at line ~623 in popup.js
+   - The second definition overwrites the first and adds an alert() side effect
+   - Neither version is actively called in the current code
+
+5. Dead Code
+   - ensureButtonRegistered() — defined but never called
+   - parseEducation() and parseExperience() — defined but never called (legacy from textarea-based UI)
+   - sendResultsToPopup() in background.js sends "compareResults" message but popup.js has no listener for it
+
+6. Native Messaging Host Not Bundled
+   - background.js references com.resumesync.parser native messaging host
+   - The Python host is not included in the repository
+   - Falls back to jsFallbackCompare, which works but is less featured

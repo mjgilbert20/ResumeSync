@@ -1,0 +1,46 @@
+ResumeSync — Manual Tests Performed
+=====================================
+Date: 03/15/2026
+
+RESUME TAB
+-----------
+[PASS] Import button (.json) opens system file picker dialog
+[PASS] Selecting a .json file populates all form fields (name, email, summary, education, experience, skills)
+[PASS] Non-.json files show error message "Unsupported file type"
+[PASS] Save button writes data to chrome.storage.local
+[PASS] Save button shows validation error when name or email is empty
+[PASS] Save button shows success message on valid save
+[PASS] Load Current button populates form from stored data
+[PASS] Load Current shows "No saved resume" when storage is empty
+[PASS] Export button downloads a .json file named "ResumeSync - {name}.json"
+[PASS] Export shows error when no resume has been saved yet
+[PASS] Add Education button appends a new education card with empty fields
+[PASS] Add Experience button appends a new experience card with empty fields
+[PASS] Card delete (x) button removes the card from the form
+[PASS] Empty cards are not included in saved data
+[PASS] Version notes field is cleared after a successful save
+
+PREVIEW TAB
+------------
+[PASS] Preview tab shows formatted resume with name, email, summary, education, experience, skills
+[PASS] Preview updates immediately after saving in the Resume tab
+
+VERSIONS TAB
+-------------
+[PASS] Saving a resume creates a new version entry with timestamp and notes
+[PASS] Version history displays up to 20 versions
+[PASS] Each version shows date, notes, and a summary line (name | N experiences | N skills)
+[PASS] Restore button loads that version's data into the form and switches to Resume tab
+[PASS] Delete button shows a confirmation dialog before deleting
+[PASS] Empty version history shows "No versions saved yet" placeholder
+
+COMPARE TAB
+-------------
+[PASS] Compare tab renders with Compare Resume button visible
+[PASS] Compare button is present and clickable (functional testing requires a live LinkedIn/Handshake page)
+
+TAB NAVIGATION
+---------------
+[PASS] Clicking each tab (Resume, Preview, Versions, Compare) switches to the correct content panel
+[PASS] Only one tab is active at a time
+[PASS] Tab switching is visually instant (no perceptible delay)
